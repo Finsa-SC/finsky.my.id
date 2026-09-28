@@ -1,0 +1,8 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+
+    volumes:
+      - "./portofolio:/usr/share/nginx/html:ro"

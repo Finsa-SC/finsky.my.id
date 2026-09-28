@@ -1,0 +1,55 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# --- OS / Arch Linux / Environment ---
+# File sistem atau file konfigurasi lokal
+.directory
+Desktop.ini
+Thumbs.db
+*.sublime-*
+.env
+.env.*
+
+# --- Security & Recon Files (Opsional) ---
+# Kalau kamu simpan hasil scan/recon, jangan sampai ikut ke-push!
+*.dumpcap
+*.pcap
+*.log
+*.txt
+results/
+scans/
+wordlists/
+
+# --- Proyekmu (FinSky) ---
+# Tambahkan folder hasil build atau output spesifikmu di sini
+dist/
+build/
+*.egg-info/
