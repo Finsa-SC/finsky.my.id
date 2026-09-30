@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   nginx:
     image: nginx:alpine
@@ -25,15 +23,22 @@ services:
   filebrowser:
     image: filebrowser/filebrowser:latest
     restart: always
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        filebrowser config init --database /database/filebrowser.db || true
+        filebrowser config set --database /database/filebrowser.db --address 0.0.0.0 --port 80 --root /srv || true
+        filebrowser users add "${FB_USERNAME}" "${FB_PASSWORD}" --perm.admin --database /database/filebrowser.db || true
+        filebrowser users update "${FB_USERNAME}" --password "${FB_PASSWORD}" --database /database/filebrowser.db || true
+        exec filebrowser --database /database/filebrowser.db
     ports:
       - "127.0.0.1:8200:80"
     volumes:
-      - filebrowser_storage:/srv
+      - /srv/drive/:/srv
       - filebrowser_db:/database
     environment:
       - PUID=1000
       - PGID=1000
-
 
 volumes:
   filebrowser_storage:
