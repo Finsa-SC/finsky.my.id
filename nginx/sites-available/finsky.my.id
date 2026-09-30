@@ -1,6 +1,6 @@
 server {
-    listen 80;
-    server_name finsky.my.id;
+    listen 80 default_server;
+    server_name finsky.my.id *.finsky.my.id;
 
     root /usr/share/nginx/html;
     index index.html;
