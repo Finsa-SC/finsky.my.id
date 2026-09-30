@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name drive.finsky.my.id
+    server_name drive.finsky.my.id;
 
     location / {
         proxy_pass http://filebrowser:80;
