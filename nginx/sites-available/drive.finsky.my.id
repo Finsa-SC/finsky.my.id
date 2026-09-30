@@ -1,6 +1,12 @@
 server {
-    listen 80;
     server_name drive.finsky.my.id;
+
+    proxy_buffering off;
+    proxy_request_buffering off;
+
+    proxy_read_timeout 600s;
+    proxy_send_timeout 600s;
+    client_max_body_size 0;
 
     location / {
         proxy_pass http://filebrowser:80;
@@ -9,6 +15,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        client_max_body_size 0;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
