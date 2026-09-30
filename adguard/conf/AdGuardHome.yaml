@@ -9,7 +9,7 @@ http:
       - GET /dns-query/{ClientID}
       - POST /dns-query/{ClientID}
     insecure_enabled: false
-  address: 0.0.0.0:3000
+  address: 0.0.0.0:80
   session_ttl: 30d
 users: []
 auth_attempts: 5
@@ -21,6 +21,8 @@ dns:
   bind_hosts:
     - 0.0.0.0
   port: 53
+  allow_unencrypted_doh: true
+  server_name: dns.finsky.my.id
   anonymize_client_ip: false
   ratelimit: 20
   ratelimit_subnet_len_ipv4: 24
