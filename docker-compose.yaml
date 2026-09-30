@@ -6,3 +6,19 @@ services:
 
     volumes:
       - "./portofolio:/usr/share/nginx/html:ro"
+
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    restart: always
+    ports:
+      - "127.0.0.1:8200:80"
+    volumes:
+      - filebrowser_storage:/srv
+      - filebrowser_db:/database
+    environment:
+      - PUID=1000
+      - PGID=1000
+
+volumes:
+  filebrowser_storage:
+  filebrowser_db:
