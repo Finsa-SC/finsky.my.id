@@ -27,15 +27,23 @@ dns:
   ratelimit_subnet_len_ipv6: 56
   ratelimit_whitelist: []
   refuse_any: true
-  upstream_dns: []
+  upstream_dns:
+    - https://dns10.quad9.net/dns-query
   upstream_dns_file: ""
-  bootstrap_dns: []
+  bootstrap_dns:
+    - 9.9.9.10
+    - 149.112.112.10
+    - 2620:fe::10
+    - 2620:fe::fe:10
   fallback_dns: []
   upstream_mode: load_balance
   fastest_timeout: 1s
   allowed_clients: []
   disallowed_clients: []
-  blocked_hosts: []
+  blocked_hosts:
+    - version.bind
+    - id.server
+    - hostname.bind
   trusted_proxies:
     - 127.0.0.0/8
     - ::1/128
@@ -61,7 +69,7 @@ dns:
   bootstrap_prefer_ipv6: false
   upstream_timeout: 10s
   private_networks: []
-  use_private_ptr_resolvers: true
+  use_private_ptr_resolvers: false
   local_ptr_upstreams: []
   use_dns64: false
   dns64_prefixes: []
@@ -109,7 +117,9 @@ filters:
     name: AdAway Default Blocklist
     id: 2
 whitelist_filters: []
-user_rules: []
+user_rules:
+  - '||nekopoi.care^'
+  - '||pornhub.com^'
 dhcp:
   enabled: false
   interface_name: ""

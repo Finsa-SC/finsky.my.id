@@ -55,6 +55,14 @@ services:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    ports:
+      - "8202:3001"
+    volumes:
+      - ./uptime-kuma:/app/data
+
 volumes:
   filebrowser_storage:
   filebrowser_db:
