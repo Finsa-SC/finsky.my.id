@@ -56,7 +56,7 @@ services:
       - ./adguard/conf:/opt/adguardhome/conf
 
   uptime-kuma:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:2
     restart: unless-stopped
     ports:
       - "8202:3001"
