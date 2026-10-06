@@ -53,3 +53,8 @@ wordlists/
 dist/
 build/
 *.egg-info/
+
+## Cache
+adguard/work/
+uptime-kuma/*.db-*
+uptime-kuma/*.db
