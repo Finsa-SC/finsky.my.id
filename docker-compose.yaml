@@ -2,6 +2,7 @@ x-project:
   version: "1.0.0"
 
 services:
+  # Server
   nginx:
     image: nginx:alpine
     restart: always
@@ -16,6 +17,7 @@ services:
       - cloudflared
       - filebrowser
 
+  # Tunnel
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: always
@@ -23,6 +25,7 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
 
+  # Cloud Drive
   filebrowser:
     image: filebrowser/filebrowser:latest
     restart: always
@@ -55,6 +58,7 @@ services:
       - ./adguard/work:/opt/adguardhome/work
       - ./adguard/conf:/opt/adguardhome/conf
 
+  # Monitor
   uptime-kuma:
     image: louislam/uptime-kuma:2
     restart: unless-stopped
