@@ -2,6 +2,8 @@ server {
     listen 80 default_server;
     server_name finsky.my.id *.finsky.my.id;
 
+    include /etc/nginx/conf.d/global_error.conf;
+
     root /usr/share/nginx/html/portofolio;
     index index.html;
 

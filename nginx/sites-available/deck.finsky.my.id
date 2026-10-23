@@ -2,6 +2,8 @@ server {
     listen 80;
     server_name deck.finsky.my.id;
 
+    include /etc/nginx/conf.d/global_error;
+
     location / {
         proxy_pass http://uptime-kuma:3001;
         proxy_set_header Host $host;

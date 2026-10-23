@@ -85,7 +85,7 @@ p{margin-top:10px;color:var(--subtext1);line-height:1.6}
 </main>
 <script>
 /* Change this if your nginx serves the assets from another URL path */
-const ASSET_BASE = "/errors/assets/";
+const ASSET_BASE = "/global_error_assets/";
 
 document.querySelectorAll("img[data-asset]").forEach(img => {
   img.addEventListener("error", () => img.style.display = "none");
