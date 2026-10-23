@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1e1e2e">
+<title>404 - Not Found</title>
+<style>
+:root{
+  /* Catppuccin Mocha */
+  --rosewater:#f5e0dc;--pink:#f5c2e7;--mauve:#cba6f7;--red:#f38ba8;--peach:#fab387;--yellow:#f9e2af;
+  --green:#a6e3a1;--teal:#94e2d5;--blue:#89b4fa;--lavender:#b4befe;
+  --text:#cdd6f4;--subtext1:#bac2de;--overlay0:#6c7086;--surface1:#45475a;--surface0:#313244;
+  --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
+  --accent:var(--mauve);
+  /* ===== ASSET LAYOUT (desktop) : edit width / offset / bottom per asset ===== */
+  --rice-w:clamp(220px,32vw,460px);--rice-x:0px;--rice-bottom:0px;--rice-display:block;
+  --oguri-w:clamp(140px,19vw,280px);--oguri-x:3vw;--oguri-bottom:2vh;--oguri-display:block;
+  --machan-w:clamp(110px,15vw,220px);--machan-x:calc(3vw + clamp(140px,19vw,280px));--machan-bottom:2vh;--machan-display:block;
+  --tosho-w:clamp(110px,15vw,220px);--tosho-x:clamp(220px,32vw,460px);--tosho-bottom:2vh;--tosho-display:block;
+  --reserve-bottom:0px; /* extra space under the text card so assets never cover it */
+}
+@media (max-width:640px){
+  :root{
+/* ===== ASSET LAYOUT (mobile) ===== */
+    --rice-w:200px;--rice-x:0px;--rice-bottom:0px;--rice-display:block;
+    --oguri-w:105px;--oguri-x:2vw;--oguri-bottom:1vh;--oguri-display:block;
+    --machan-w:80px;--machan-x:calc(2vw + 105px);--machan-bottom:1vh;--machan-display:block;
+    --tosho-w:80px;--tosho-x:calc(2vw + 105px);--tosho-bottom:1vh;--tosho-display:none;
+    --reserve-bottom:260px;
+  }
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  min-height:100dvh;color:var(--text);font-family:"Nunito","Segoe UI",system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 45%),
+    radial-gradient(circle at 90% 90%,color-mix(in srgb,var(--mauve) 14%,transparent),transparent 45%),
+    var(--base);
+  display:grid;place-items:center;overflow-x:hidden;
+}
+.track{position:fixed;left:0;right:0;bottom:12%;height:6px;background:repeating-linear-gradient(90deg,var(--surface1) 0 24px,transparent 24px 40px);opacity:.5;border-radius:3px}
+main{position:relative;z-index:1;width:min(92vw,560px);padding:24px 0 calc(24px + var(--reserve-bottom));text-align:center}
+.card{background:color-mix(in srgb,var(--mantle) 82%,transparent);backdrop-filter:blur(6px);border:2px solid var(--surface1);border-radius:24px;padding:28px 24px;box-shadow:0 10px 0 var(--crust)}
+.code{font-size:clamp(4.5rem,18vw,8rem);font-weight:900;line-height:1;color:var(--accent);letter-spacing:.04em;text-shadow:4px 4px 0 var(--crust)}
+h1{margin-top:6px;font-size:clamp(1.3rem,4.5vw,1.8rem);color:var(--rosewater)}
+p{margin-top:10px;color:var(--subtext1);line-height:1.6}
+.path{display:inline-block;margin-top:14px;max-width:100%;padding:4px 12px;border-radius:999px;background:var(--surface0);color:var(--lavender);font:.85rem ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.btn{padding:10px 20px;border-radius:999px;border:2px solid var(--accent);background:var(--accent);color:var(--crust);font:inherit;font-weight:800;text-decoration:none;cursor:pointer;transition:transform .12s}
+.btn.alt{background:transparent;color:var(--accent)}
+.btn:hover{transform:translateY(-2px)}
+.btn:focus-visible{outline:3px solid var(--lavender);outline-offset:3px}
+/* assets */
+.asset{position:fixed;z-index:2;pointer-events:none;user-select:none;bottom:var(--bottom);width:var(--w);height:auto;max-width:45vw}
+.asset.left{left:var(--x)}.asset.right{right:var(--x)}
+.group{position:fixed;z-index:2;pointer-events:none;bottom:var(--bottom);width:var(--w);max-width:45vw;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.group.right{right:var(--x)}.group.left{left:var(--x);align-items:flex-start}
+#rice{max-width:60vw}
+.group img{width:100%;height:auto;user-select:none}
+.bubble{position:relative;width:max-content;max-width:min(260px,70vw);padding:12px 16px;border-radius:18px;background:var(--rosewater);color:var(--crust);font-weight:800;font-size:.95rem;line-height:1.4;text-align:center}
+.bubble::after{content:"";position:absolute;bottom:-9px;right:28%;border:10px solid transparent;border-top-color:var(--rosewater);border-bottom:0}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+</head>
+<body>
+<div class="track" aria-hidden="true"></div>
+<div id="rice" class="group right" style="--w:var(--rice-w);--x:var(--rice-x);--bottom:var(--rice-bottom);display:var(--rice-display)"><div class="bubble">I searched everywhere, but the data you are looking for was not found!</div><img data-asset="rice-computer.png" alt="Rice Shower with a computer"></div>
+<img id="oguri" class="asset left" style="--w:var(--oguri-w);--x:var(--oguri-x);--bottom:var(--oguri-bottom);display:var(--oguri-display)" data-asset="oguri-confused.png" alt="Oguri Cap looking confused">
+<img id="machan" class="asset left" style="--w:var(--machan-w);--x:var(--machan-x);--bottom:var(--machan-bottom);display:var(--machan-display)" data-asset="machan-hello.gif" alt="Mejiro Ryan waving">
+<img id="tosho" class="asset right" style="--w:var(--tosho-w);--x:var(--tosho-x);--bottom:var(--tosho-bottom);display:var(--tosho-display)" data-asset="tosho-dance.gif" alt="Daitaku Helios dancing">
+<main>
+  <div class="card">
+    <div class="code" id="code">404</div>
+    <h1>Page not found</h1>
+    <p>The page you are looking for does not exist or has been moved.</p>
+    <span class="path" id="path"></span>
+    <div class="actions">
+      <a class="btn" href="/">Back to the paddock</a>
+      <button class="btn alt" type="button" id="back">Go back</button>
+    </div>
+  </div>
+</main>
+<script>
+/* Change this if your nginx serves the assets from another URL path */
+const ASSET_BASE = "/errors/assets/";
+
+document.querySelectorAll("img[data-asset]").forEach(img => {
+  img.addEventListener("error", () => img.style.display = "none");
+  img.src = ASSET_BASE + img.dataset.asset;
+});
+document.getElementById("path").textContent = location.pathname + location.search;
+document.getElementById("back").addEventListener("click", () => history.length > 1 ? history.back() : location.assign("/"));
+
+</script>
+</body>
+</html>
