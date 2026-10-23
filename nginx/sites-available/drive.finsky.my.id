@@ -2,6 +2,7 @@ server {
     server_name drive.finsky.my.id;
 
     include /etc/nginx/conf.d/global_error;
+    include /etc/nginx/snippets/static_cache.conf;
 
     proxy_buffering off;
     proxy_request_buffering off;

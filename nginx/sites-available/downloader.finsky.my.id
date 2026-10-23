@@ -3,6 +3,7 @@ server {
     server_name downloader.finsky.my.id;
 
     include /etc/nginx/conf.d/global_error.conf;
+    include /etc/nginx/snippets/static_cache.conf;
 
     root /usr/share/nginx/html/downloader;
     index index.html;

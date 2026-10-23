@@ -3,6 +3,7 @@ server {
     server_name dns.finsky.my.id;
 
     include /etc/nginx/conf.d/global_error;
+    include /etc/nginx/snippets/static_cache.conf;
 
     location / {
         proxy_pass http://adguard:80;
