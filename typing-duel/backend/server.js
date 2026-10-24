@@ -45,11 +45,12 @@ function join(ws, m) {
   if (!CHARS[m.char]) return send(ws, { type: 'error', msg: 'Karakter tidak dikenal server.' });
   const char = m.char;
   const name = String(m.name || '').trim().slice(0, 16) || 'Player ' + (r.players.length + 1);
-  r.players.push({ ws, name, char, hp: MAX_HP, noHit: 0 });
+  // bonus = permanent extra damage (Tokai Teio), shield = extra HP buffer taken before HP (Oguri Cap)
+  r.players.push({ ws, name, char, hp: MAX_HP, noHit: 0, bonus: 0, shield: CHARS[char].shield || 0 });
   ws.room = r; ws.slot = r.players.length - 1;
   send(ws, { type: 'joined', slot: ws.slot, room: code });
   if (r.players.length === 2) {
-    bc(r, { type: 'start', max: MAX_HP, players: r.players.map(p => ({ name: p.name, char: p.char, hp: p.hp })) });
+    bc(r, { type: 'start', max: MAX_HP, players: r.players.map(p => ({ name: p.name, char: p.char, hp: p.hp, shield: p.shield })) });
     nextRound(r);
   }
 }
@@ -85,13 +86,18 @@ function done(ws, m) {
   else if (!r.grace) r.grace = setTimeout(() => resolve(r), GRACE); // wait briefly for the other client's time
 }
 
+function heal(p, slot, amount, ev) {
+  const gained = Math.min(MAX_HP, p.hp + amount) - p.hp;
+  if (gained > 0) { p.hp += gained; ev.push({ t: 'heal', slot, v: gained }); }
+}
+
 function resolve(r) {
   clearTimeout(r.grace); clearTimeout(r.timer); r.grace = null; r.state = 'result';
   const [a, b] = r.results;
   const w = a == null ? 1 : b == null ? 0 : (a <= b ? 0 : 1);
   const att = r.players[w], def = r.players[1 - w], ca = CHARS[att.char], cd = CHARS[def.char];
-  const ev = []; let dmg = DMG;
-  const hit = [0, 0]; // damage actually taken per slot
+  const ev = []; let dmg = DMG + att.bonus;
+  const hit = [0, 0]; // damage aimed at each slot (before shield)
   if (chance(ca.crit)) { dmg *= 2; ev.push({ t: 'crit', slot: w }); }
   if (chance(cd.immune)) { ev.push({ t: 'immune', slot: 1 - w }); }
   else if (chance(cd.reflect)) { // damage is split 50/50: defender still takes damage, attacker shares it
@@ -100,12 +106,32 @@ function resolve(r) {
     ev.push({ t: 'reflect', slot: 1 - w });
   }
   else hit[1 - w] = dmg;
+  const diff = (a == null || b == null) ? null : Math.abs(a - b) / 1000; // time gap in seconds
   r.players.forEach((p, i) => {
-    if (hit[i] > 0) { p.hp = Math.max(0, p.hp - hit[i]); p.noHit = 0; } else p.noHit++;
-    const h = CHARS[p.char].heal;
-    if (h && p.hp > 0 && p.noHit >= h.after) { p.hp = Math.min(MAX_HP, p.hp + h.amount); p.noHit = 0; ev.push({ t: 'heal', slot: i, v: h.amount }); }
+    const c = CHARS[p.char];
+    if (hit[i] > 0) {
+      const absorbed = Math.min(p.shield, hit[i]);
+      p.shield -= absorbed;
+      p.hp = Math.max(0, p.hp - (hit[i] - absorbed));
+      p.noHit = 0;
+    } else p.noHit++;
+    if (p.hp <= 0) return;
+    if (c.heal && p.noHit >= c.heal.after) { heal(p, i, c.heal.amount, ev); p.noHit = 0; }
+    if (c.timeHeal && i === w) {
+      const t = c.timeHeal;
+      const v = diff == null
+        ? (t.fallback ?? Math.ceil(t.max / 2))
+        : Math.min(t.max, Math.max(1, Math.round(diff * t.mult)));
+      heal(p, i, v, ev);
+    }
+    if (c.winShield && i === w) {
+      const s = c.winShield;
+      const gain = Math.min(s.max, Math.round((MAX_HP - p.hp) * s.mult), s.cap - p.shield);
+      if (gain > 0) { p.shield += gain; ev.push({ t: 'shield', slot: i, v: gain }); }
+    }
+    if (c.ramp && r.round % c.ramp.every === 0) { p.bonus += c.ramp.amount; ev.push({ t: 'ramp', slot: i, v: c.ramp.amount }); }
   });
-  bc(r, { type: 'result', winner: w, hit, ev, hp: r.players.map(p => p.hp), times: r.results });
+  bc(r, { type: 'result', winner: w, hit, ev, hp: r.players.map(p => p.hp), shield: r.players.map(p => p.shield), times: r.results });
   const d0 = r.players[0].hp <= 0, d1 = r.players[1].hp <= 0;
   if (d0 || d1) {
     const winner = d0 && d1 ? w : d0 ? 1 : 0; // both KO'd by a split: the faster typer wins

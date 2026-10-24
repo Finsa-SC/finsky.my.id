@@ -42,10 +42,49 @@
   {
     "id": "almond-eye",
     "name": "Almond Eye",
-    "desc": "Heal +8 jika tidak kena damage selama 2 ronde",
+    "desc": "Heal +10 jika tidak kena damage selama 2 ronde",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "agnes-tachyon",
+    "name": "Agnes Tachyon",
+      "desc": "Heal tiap menang ronde: selisih waktu ketik (detik) x 8, maksimal 15 HP",    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "tokai-teio",
+    "name": "Tokai Teio",
+    "desc": "Tiap ronde kelipatan 3 (3, 6, 9, ...), damage +1 permanen",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "oguri-cap",
+    "name": "Oguri Cap",
+    "desc": "Mulai match dengan shield 20 yang menyerap damage sebelum HP",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "tm-opera-o",
+    "name": "TM Opera O",
+    "desc": "Tiap menang ronde dapat shield sesuai HP yang hilang (12%, maks 8 per menang, total maks 20)",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.png",
       "attacking": "attacking.gif"
     }
   }

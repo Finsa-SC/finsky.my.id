@@ -1,4 +1,5 @@
 const API = '/typing-duel/api';
+const CARATS_IMG = '/typing-duel/assets/carats.png';
 const $ = s => document.querySelector(s);
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + API + '/ws';
 let chars = [], sel, ws, slot, players, max = 100, word = '', typed = 0, startT = 0, active = false, round = 0;
@@ -32,7 +33,7 @@ function handle(m) {
     else if (m.type === 'joined') { slot = m.slot; $('#msg').style.color = '#ffffff'; $('#msg').textContent = `Room ${m.room}: menunggu lawan...`; }
     else if (m.type === 'start') {
         players = m.players; max = m.max; $('#lobby').hidden = true; $('#game').hidden = false;
-        players.forEach((p, i) => { $(`#h${i} b`).textContent = p.name; setHp(i, p.hp); setSprite(i, 'idle'); });
+        players.forEach((p, i) => { $(`#h${i} b`).textContent = p.name; setHp(i, p.hp, p.shield); setSprite(i, 'idle'); });
     }
     else if (m.type === 'round') startRound(m);
     else if (m.type === 'result') showResult(m);
@@ -40,7 +41,20 @@ function handle(m) {
     else if (m.type === 'left') over('Lawan keluar dari game.');
 }
 const setSprite = (i, st) => $(`#c${i} img`).src = sprite(players[i].char, st);
-function setHp(i, hp) { $(`#h${i} i`).style.width = hp / max * 100 + '%'; $(`#h${i} span`).textContent = `${hp} / ${max}`; }
+
+// HP fill + shield overlay. The shield is a striped segment drawn on top of the HP fill,
+// covering as much of the bar as its amount (shield / max HP), anchored at the HP's leading edge.
+function setHp(i, hp, shield = 0) {
+    const bar = $(`#h${i} .bar`);
+    let sh = bar.querySelector('u');
+    if (!sh) { sh = document.createElement('u'); bar.append(sh); }
+    const hpPct = hp / max * 100, shPct = Math.min(shield, hp) / max * 100;
+    $(`#h${i} i`).style.width = hpPct + '%';
+    sh.style.width = shPct + '%';
+    sh.style.left = (i ? 100 - hpPct : hpPct - shPct) + '%'; // player 2's bar fills from the right
+    sh.style.opacity = shPct > 0 ? 1 : 0;
+    $(`#h${i} span`).textContent = `${hp} / ${max}` + (shield > 0 ? `  🛡 ${shield}` : '');
+}
 
 function startRound(m) {
     round = m.round; word = m.word; typed = 0; active = false; $('#word').textContent = ''; $('#word').className = '';
@@ -75,22 +89,46 @@ function pop(i, text) {
     const el = document.createElement('div'); el.className = 'pop'; el.textContent = text;
     el.style[i ? 'right' : 'left'] = '10vw'; $('#game').append(el); setTimeout(() => el.remove(), 1200);
 }
+
+// Throws the carats image from the attacker's front to the target, in a spinning arc.
+const THROW_MS = 350;
+function throwCarats(from, to) {
+    const g = $('#game').getBoundingClientRect(), a = $(`#c${from}`).getBoundingClientRect(), b = $(`#c${to}`).getBoundingClientRect();
+    const size = Math.max(40, Math.min(70, g.height * 0.07));
+    const x0 = (from === 0 ? a.right : a.left - size) - g.left, y0 = a.top + a.height * 0.45 - size / 2 - g.top;
+    const x1 = b.left + b.width / 2 - size / 2 - g.left, y1 = b.top + b.height * 0.45 - size / 2 - g.top;
+    const el = document.createElement('img'); el.src = CARATS_IMG; el.className = 'carats';
+    el.style.width = el.style.height = size + 'px';
+    $('#game').append(el);
+    el.animate([
+        { transform: `translate(${x0}px,${y0}px) rotate(0deg) scale(1)` },
+        { transform: `translate(${(x0 + x1) / 2}px,${Math.min(y0, y1) - size * 1.5}px) rotate(360deg) scale(1.25)`, offset: 0.5 },
+        { transform: `translate(${x1}px,${y1}px) rotate(720deg) scale(1)` }
+    ], { duration: THROW_MS, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove();
+}
+
 function showResult(m) {
     active = false; const w = m.winner, t = m.times.map(x => x == null ? '-' : (x / 1000).toFixed(2) + 's');
     $('#info').textContent = `${players[w].name} tercepat (${t[0]} vs ${t[1]})`;
     const A = $(`#c${w}`);
     setSprite(w, 'attacking'); A.classList.add('l' + w);
+    const LAUNCH = 150, IMPACT = LAUNCH + THROW_MS; // lunge finishes -> throw -> impact
+    setTimeout(() => throwCarats(w, 1 - w), LAUNCH);
     setTimeout(() => {
         m.hit.forEach((d, i) => {
             if (d > 0) { setSprite(i, 'damaged'); $(`#c${i}`).classList.add('hit'); pop(i, `-${d}`); }
         });
-        m.ev.forEach(e => pop(e.slot, { crit: 'CRIT x2!', immune: 'IMMUNE!', reflect: 'SPLIT 50%!', heal: `HEAL +${e.v}` }[e.t]));
-        m.hp.forEach((h, i) => setHp(i, h));
-    }, 250);
+        m.ev.forEach(e => pop(e.slot, { crit: 'CRIT x2!', immune: 'IMMUNE!', reflect: 'SPLIT 50%!', heal: `HEAL +${e.v}`, ramp: `DMG +${e.v}`, shield: `SHIELD +${e.v}` }[e.t]));
+        m.shield.forEach((s, i) => {
+            if ((players[i].shield || 0) > 0 && s === 0) pop(i, 'SHIELD BREAK!');
+            players[i].shield = s;
+        });
+        m.hp.forEach((h, i) => setHp(i, h, m.shield[i]));
+    }, IMPACT);
     setTimeout(() => {
         players.forEach((_, i) => setSprite(i, 'idle'));
         A.classList.remove('l' + w);
         document.querySelectorAll('.char').forEach(c => c.classList.remove('hit'));
-    }, 1500);
+    }, IMPACT + 1250);
 }
 function over(text) { $('#over h2').textContent = text; $('#over').hidden = false; $('#game').hidden = false; }
