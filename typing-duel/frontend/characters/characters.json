@@ -1,0 +1,52 @@
+[
+  {
+    "id": "daiwa-scarlet",
+    "name": "Daiwa Scarlet",
+    "desc": "Crit 25%: damage x2",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "special-week",
+    "name": "Special Week",
+    "desc": "Immune 35%: kebal dari serangan",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "meisho-dotto",
+    "name": "Meisho Dotto",
+    "desc": "Reflect 25%: pantulkan damage ke penyerang",
+    "sprites": {
+      "idle": "idle.png",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "haru-urara",
+    "name": "Haru Urara",
+    "desc": "Flashbang 30%: layar putih 1 detik ke musuh di awal ronde",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "almond-eye",
+    "name": "Almond Eye",
+    "desc": "Heal +8 jika tidak kena damage selama 2 ronde",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  }
+]

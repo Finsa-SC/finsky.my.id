@@ -13,6 +13,7 @@ services:
       - "./errors:/usr/share/nginx/html/errors:ro"
       - "./portofolio:/usr/share/nginx/html/portofolio:ro"
       - "./downloader/frontend:/usr/share/nginx/html/downloader:ro"
+      - "./typing-duel/frontend:/usr/share/nginx/html/typing-duel:ro"
 
       # Configuration files
       - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
@@ -84,6 +85,13 @@ services:
     restart: always
     ports:
       - "8203:8203"
+
+  # Game
+  typing-duel:
+    build: ./typing-duel
+    restart: always
+    ports:
+      - "8204:8204"
 
 volumes:
   filebrowser_storage:

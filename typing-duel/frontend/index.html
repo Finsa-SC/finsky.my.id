@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>Typing Duel</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/typing-duel/style.css">
+</head>
+<body>
+    <section id="lobby">
+        <h1>Typing Duel</h1>
+        <div class="row">
+            <input id="name" maxlength="16" placeholder="Nama kamu">
+            <input id="room" maxlength="12" placeholder="Kode room (bebas, mis. ARENA1)">
+        </div>
+        <div id="chars"></div>
+        <p id="desc"></p>
+        <button id="go">Masuk arena</button>
+        <p id="msg"></p>
+    </section>
+
+    <section id="game" hidden>
+        <div class="hud" id="h0"><b></b><div class="bar"><i></i></div><span></span></div>
+        <div class="hud r" id="h1"><b></b><div class="bar"><i></i></div><span></span></div>
+        <div id="word"></div>
+        <div id="info"></div>
+        <div class="char" id="c0"><img></div>
+        <div class="char r" id="c1"><img></div>
+        <div class="floor"></div>
+        <div id="flash"></div>
+        <div id="over" hidden>
+            <h2></h2>
+            <button onclick="location.reload()">Main lagi</button>
+        </div>
+    </section>
+
+    <script src="/typing-duel/game.js"></script>
+</body>
+</html>

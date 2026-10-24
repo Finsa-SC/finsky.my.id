@@ -1,8 +1,8 @@
 server {
+    listen 80;
     server_name drive.finsky.my.id;
 
-    include /etc/nginx/conf.d/global_error;
-    include /etc/nginx/snippets/static_cache.conf;
+    include /etc/nginx/conf.d/global_error.conf;
 
     proxy_buffering off;
     proxy_request_buffering off;
