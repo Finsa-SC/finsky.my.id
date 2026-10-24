@@ -2,7 +2,7 @@
   {
     "id": "daiwa-scarlet",
     "name": "Daiwa Scarlet",
-    "desc": "Berserker (25%): damage x2",
+    "desc": "Berserker: Menang ronde tanpa salah ketik damage x1,5",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -12,7 +12,7 @@
   {
     "id": "special-week",
     "name": "Special Week",
-    "desc": "To Weak (35%): kebal dari serangan",
+    "desc": "Come To Me: Memiliki stack, diserang +2, menyerang +1, Di 10 stack saat terkena damage akan immune stack dan mengonsumsi 5. Saat menyerang di full stack damage x2 dan mengonsumsi 10 stack",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -22,7 +22,7 @@
   {
     "id": "meisho-dotto",
     "name": "Meisho Dotto",
-    "desc": "Reflect 25%: dia terima 50% damage, penyerang terima 100%",
+    "desc": "Good Reflect: Kalah selisih <=0,3 detik, damage reduction 50%, melakukan parry ke musuh 100% dmg",
     "sprites": {
       "idle": "idle.png",
       "damaged": "damaged.gif",
@@ -32,7 +32,7 @@
   {
     "id": "haru-urara",
     "name": "Haru Urara",
-    "desc": "Flashbang (30%): layar putih 0.5 detik ke musuh di awal ronde",
+    "desc": "Flashbang: tiap ronde, plus flash langsung tiap lawan salah ketik selama 0.2 detik",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -82,7 +82,7 @@
   {
     "id": "tm-opera-o",
     "name": "TM Opera O",
-    "desc": "It's Not the End: Tiap menang ronde dapat shield sesuai HP yang hilang (12%, maks 8 per menang, total maks 20)",
+    "desc": "It's Not the End: ketika menang mendapat shield sesuai HP hilang. Punya shield: +1 damage per 5 shield",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -102,9 +102,19 @@
   {
     "id": "matikanefukukitaru",
     "name": "Matikane Fukukitaru",
-    "desc": "Quick Draw: menang ronde di bawah 0,5 detik, +3 damage dan tembus shield (+3 lagi)",
+    "desc": "Quick Draw: menang ronde di bawah 0,5 detik maka +3 damage, jika musuh punya shield (+3 lagi + mengabaikan shield)",
     "sprites": {
       "idle": "idle.gif",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "gentildonna",
+    "name": "Gentildonna",
+    "desc": "My Turn Now: menang setelah lawan heal, damage + heal sebesar heal lawan (maks 10)",
+    "sprites": {
+      "idle": "idle.png",
       "damaged": "damaged.gif",
       "attacking": "attacking.gif"
     }
