@@ -2,7 +2,7 @@
   {
     "id": "daiwa-scarlet",
     "name": "Daiwa Scarlet",
-    "desc": "Crit 25%: damage x2",
+    "desc": "Berserker (25%): damage x2",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -12,7 +12,7 @@
   {
     "id": "special-week",
     "name": "Special Week",
-    "desc": "Immune 35%: kebal dari serangan",
+    "desc": "To Weak (35%): kebal dari serangan",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -22,7 +22,7 @@
   {
     "id": "meisho-dotto",
     "name": "Meisho Dotto",
-    "desc": "Reflect 25%: pantulkan damage ke penyerang",
+    "desc": "Reflect 25%: dia terima 50% damage, penyerang terima 100%",
     "sprites": {
       "idle": "idle.png",
       "damaged": "damaged.gif",
@@ -32,7 +32,7 @@
   {
     "id": "haru-urara",
     "name": "Haru Urara",
-    "desc": "Flashbang 30%: layar putih 1 detik ke musuh di awal ronde",
+    "desc": "Flashbang (30%): layar putih 0.5 detik ke musuh di awal ronde",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -42,7 +42,7 @@
   {
     "id": "almond-eye",
     "name": "Almond Eye",
-    "desc": "Heal +10 jika tidak kena damage selama 2 ronde",
+    "desc": "Holy Staff: +15 HP jika tidak kena damage 2 ronde. Hidup kembali sekali dengan 20 HP",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -52,7 +52,8 @@
   {
     "id": "agnes-tachyon",
     "name": "Agnes Tachyon",
-      "desc": "Heal tiap menang ronde: selisih waktu ketik (detik) x 8, maksimal 15 HP",    "sprites": {
+    "desc": "Got You: Heal setiap menang ronde sesuai selisih waktu ketik (x8 per detik), min 1 maks 8 HP",
+    "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
       "attacking": "attacking.gif"
@@ -61,7 +62,7 @@
   {
     "id": "tokai-teio",
     "name": "Tokai Teio",
-    "desc": "Tiap ronde kelipatan 3 (3, 6, 9, ...), damage +1 permanen",
+    "desc": "Anger of Warrior: Tiap ronde kelipatan 4 (4, 8, 12, ...), damage +2 permanen",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -71,7 +72,7 @@
   {
     "id": "oguri-cap",
     "name": "Oguri Cap",
-    "desc": "Mulai match dengan shield 20 yang menyerap damage sebelum HP",
+    "desc": "Harder Than Rock: Mulai dengan shield 20. Setelah hancur, damage ke HP maksimal 8 per serangan",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -81,10 +82,30 @@
   {
     "id": "tm-opera-o",
     "name": "TM Opera O",
-    "desc": "Tiap menang ronde dapat shield sesuai HP yang hilang (12%, maks 8 per menang, total maks 20)",
+    "desc": "It's Not the End: Tiap menang ronde dapat shield sesuai HP yang hilang (12%, maks 8 per menang, total maks 20)",
     "sprites": {
       "idle": "idle.gif",
-      "damaged": "damaged.png",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "gold-ship",
+    "name": "Gold Ship",
+    "desc": "More Than Your: Menang dengan kata >5 huruf, tiap huruf ekstra +2 shield dan +1 damage",
+    "sprites": {
+      "idle": "idle.png",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "matikanefukukitaru",
+    "name": "Matikane Fukukitaru",
+    "desc": "Quick Draw: menang ronde di bawah 0,5 detik, +3 damage dan tembus shield (+3 lagi)",
+    "sprites": {
+      "idle": "idle.gif",
+      "damaged": "damaged.gif",
       "attacking": "attacking.gif"
     }
   }
