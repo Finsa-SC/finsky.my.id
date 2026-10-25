@@ -22,7 +22,7 @@
   {
     "id": "meisho-dotto",
     "name": "Meisho Dotto",
-    "desc": "Good Reflect: Kalah selisih <=0,3 detik, damage reduction 50%, melakukan parry ke musuh 100% dmg",
+    "desc": "Good Reflect: Window parry mulai 0,3 detik, naik 0,1 jika menang / 0,2 jika kalah tanpa parry, reset saat parry terpicu. Kalah dalam window: damage -50% dan dipantulkan 100%. Perfect Parry (selisih ≤0,3 detik): pantulan x2 dan damage yang harusnya diterima jadi heal",
     "sprites": {
       "idle": "idle.png",
       "damaged": "damaged.gif",
@@ -32,7 +32,7 @@
   {
     "id": "haru-urara",
     "name": "Haru Urara",
-    "desc": "Flashbang: tiap ronde, plus flash langsung tiap lawan salah ketik selama 0.2 detik",
+    "desc": "Flashbang: tiap ronde dengan kesempatan 30% atau flash langsung tiap lawan salah ketik selama 0.2 detik",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -42,7 +42,7 @@
   {
     "id": "almond-eye",
     "name": "Almond Eye",
-    "desc": "Holy Staff: +15 HP jika tidak kena damage 2 ronde. Hidup kembali sekali dengan 20 HP",
+    "desc": "Holy Seed: Tiap menang ronde dapat 1 seed. Tiap seed mengurangi damage yang diterima 2. Di 2 seed, seed pecah dan heal 15. Hidup kembali sekali dengan 20 HP",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -62,7 +62,7 @@
   {
     "id": "tokai-teio",
     "name": "Tokai Teio",
-    "desc": "Anger of Warrior: Tiap ronde kelipatan 4 (4, 8, 12, ...), damage +2 permanen",
+    "desc": "Anger of Warrior: Mulai dengan damage reduction 50%, tiap menyerang berkurang 5%. Saat reduction 0%, tiap menyerang damage +1 permanen. Tiap ronde kelipatan 3, damage +1 permanen",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -82,7 +82,7 @@
   {
     "id": "tm-opera-o",
     "name": "TM Opera O",
-    "desc": "It's Not the End: ketika menang mendapat shield sesuai HP hilang. Punya shield: +1 damage per 5 shield",
+    "desc": "It's Not the End: ketika menang mendapat shield sesuai HP hilang max 30. Punya shield: +1 damage per 5 shield",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -102,7 +102,7 @@
   {
     "id": "matikanefukukitaru",
     "name": "Matikane Fukukitaru",
-    "desc": "Quick Draw: menang ronde di bawah 0,5 detik maka +3 damage, jika musuh punya shield (+3 lagi + mengabaikan shield)",
+    "desc": "Quick Draw: menang ronde di bawah 0,6 detik maka +3 damage, jika musuh punya shield (+3 lagi + mengabaikan shield)",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",
@@ -112,9 +112,19 @@
   {
     "id": "gentildonna",
     "name": "Gentildonna",
-    "desc": "My Turn Now: menang setelah lawan heal, damage + heal sebesar heal lawan (maks 10)",
+    "desc": "My Turn Now: menang setelah lawan heal, damage + heal sebesar heal lawan (maks 10). Iron Mirror: tiap ronde kelipatan 5, jika lawan tidak heal selama 5 ronde itu, serangan berikutnya yang masuk diubah jadi heal (aktif sampai terkena damage)",
     "sprites": {
       "idle": "idle.png",
+      "damaged": "damaged.gif",
+      "attacking": "attacking.gif"
+    }
+  },
+  {
+    "id": "satono-diamond",
+    "name": "Satono Diamond",
+    "desc": "Poison Mark: Tiap menang ronde, musuh dapat 2 mark racun (dibatasi kapasitas, awal 1). Ronde berikutnya mark meledak, jumlah ledakan = 1 + 1 per 0,5 detik selisih waktu jika Diamond lebih cepat (lawan tidak selesai = semua meledak). Tiap ledakan 2 damage (+1 tiap kelipatan 5 ronde), true damage yang tidak bisa dikurangi dan tidak dihitung terkena serangan. Tiap 5 ledakan yang diterima musuh, kapasitas mark +1 dan Diamond heal 10",
+    "sprites": {
+      "idle": "idle.gif",
       "damaged": "damaged.gif",
       "attacking": "attacking.gif"
     }

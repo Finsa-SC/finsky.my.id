@@ -9,26 +9,37 @@
 <body>
     <section id="lobby">
         <h1>Typing Duel</h1>
+        <p class="sub">Ketik cepat, serang duluan, menangkan lomba!</p>
         <div class="row">
             <input id="name" maxlength="16" placeholder="Nama kamu">
             <input id="room" maxlength="12" placeholder="Kode room (bebas, mis. ARENA1)">
         </div>
         <div id="chars"></div>
-        <p id="desc"></p>
-        <button id="go">Masuk arena</button>
+        <div id="desc"></div>
+        <div class="row">
+            <button id="go">Masuk arena</button>
+            <button id="quick">Cari lawan cepat</button>
+        </div>
         <p id="msg"></p>
     </section>
 
     <section id="game" hidden>
         <div class="hud" id="h0"><b></b><div class="bar"><i></i></div><span></span></div>
         <div class="hud r" id="h1"><b></b><div class="bar"><i></i></div><span></span></div>
+        <div id="rnd"></div>
         <div id="word"></div>
         <div id="info"></div>
+        <div id="timer"><i></i></div>
         <div class="char" id="c0"><img></div>
         <div class="char r" id="c1"><img></div>
         <div class="floor"></div>
+        <div id="dock">
+            <div class="fx" id="fx0"></div>
+            <div class="fx r" id="fx1"></div>
+        </div>
         <div id="flash"></div>
         <div id="over" hidden>
+            <p id="verdict"></p>
             <h2></h2>
             <button onclick="location.reload()">Main lagi</button>
         </div>

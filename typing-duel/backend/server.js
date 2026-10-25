@@ -12,6 +12,17 @@ const send = (ws, o) => ws.readyState === 1 && ws.send(JSON.stringify(o));
 const bc = (r, o) => r.players.forEach(p => send(p.ws, o));
 // Small status text shown next to the HP numbers (stacks / permanent bonus)
 const badge = p => { const c = CHARS[p.char]; return c.stacks ? `✦ ${p.stacks}/${c.stacks.max}` : c.ramp ? `⚔ +${p.bonus}` : ''; };
+// Raw per-player status sent to the client so the skill dock can show stacks / seeds / mirror / etc.
+// Satono Diamond's poison: capacity grows with the poison hits the victim has taken, damage grows with the round number.
+const poisonMax = (v, pc) => pc ? pc.max + Math.floor(v.poisonHits / pc.growEvery) : 0;
+const poisonDmg = (pc, round) => pc ? pc.base + pc.roundBonus * Math.floor(round / pc.roundEvery) : 0;
+// opp = the other player (needed for the poison info), round = the round whose resolve comes next.
+const status = (p, opp, round) => {
+  const pc = CHARS[opp.char].poison;
+  return { stacks: p.stacks, bonus: p.bonus, red: p.red, mirror: p.mirror, seed: p.seed, parryGap: p.parryGap, revived: p.revived, noHit: p.noHit, healAcc: p.healAcc,
+    poison: p.poison, poisonMax: poisonMax(p, pc), poisonDmg: poisonDmg(pc, round), poisonHits: p.poisonHits, poisonGrow: pc ? pc.growEvery : 0 };
+};
+const stats = r => r.players.map((p, i) => status(p, r.players[1 - i], r.round + 1));
 
 const server = http.createServer((req, res) => {
   const url = decodeURIComponent(req.url.split('?')[0]);
@@ -32,13 +43,28 @@ wss.on('connection', ws => {
   ws.isAlive = true; ws.on('pong', () => ws.isAlive = true);
   ws.on('message', raw => {
     let m; try { m = JSON.parse(raw); } catch { return; }
-    if (m.type === 'join' && !ws.room) join(ws, m);
+    if (m.type === 'join' && !ws.room && !ws.queued) join(ws, m);
+    else if (m.type === 'quick' && !ws.room && !ws.queued) quick(ws, m);
+    else if (m.type === 'cancel' && ws.queued) unqueue(ws);
     else if (m.type === 'done' && ws.room) done(ws, m);
     else if (m.type === 'typo' && ws.room) typo(ws, m);
   });
   ws.on('close', () => leave(ws));
 });
 setInterval(() => wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }), 30000);
+
+// ---- Quick match: players wait in a FIFO queue; as soon as two are waiting they get a private auto-generated room ----
+const queue = [];
+const unqueue = ws => { const k = queue.findIndex(q => q.ws === ws); if (k >= 0) queue.splice(k, 1); ws.queued = false; };
+function quick(ws, m) {
+  if (!CHARS[m.char]) return send(ws, { type: 'error', msg: 'Karakter tidak dikenal server.' });
+  while (queue.length && queue[0].ws.readyState !== 1) queue.shift(); // drop players who disconnected while waiting
+  if (!queue.length) { queue.push({ ws, name: m.name, char: m.char }); ws.queued = true; return send(ws, { type: 'queued' }); }
+  const other = queue.shift(); other.ws.queued = false;
+  let code; do { code = 'Q' + Math.random().toString(36).slice(2, 9).toUpperCase(); } while (rooms.has(code));
+  join(other.ws, { room: code, name: other.name, char: other.char });
+  join(ws, { room: code, name: m.name, char: m.char });
+}
 
 function join(ws, m) {
   const code = String(m.room || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12).toUpperCase();
@@ -50,11 +76,12 @@ function join(ws, m) {
   const char = m.char;
   const name = String(m.name || '').trim().slice(0, 16) || 'Player ' + (r.players.length + 1);
   // bonus = permanent damage (Teio), stacks (Special Week), healAcc = HP healed since Gentildonna last countered, revived = Almond's one-time revive
-  r.players.push({ ws, name, char, hp: MAX_HP, noHit: 0, bonus: 0, stacks: 0, healAcc: 0, revived: false, shield: CHARS[char].shield || 0 });
+  // mirror = Gentildonna's Iron Mirror is active, healed = this player healed during the current 5-round window, seed = Almond's Holy Seed count, red = Teio's damage reduction %, poison/poisonHits = marks on this player / poison hits taken (Satono Diamond), parryGap = Meisho's current parry window (seconds)
+  r.players.push({ ws, name, char, hp: MAX_HP, noHit: 0, bonus: 0, stacks: 0, seed: 0, red: (CHARS[char].reduction || {}).start || 0, poison: 0, poisonHits: 0, parryGap: (CHARS[char].parry || {}).gap || 0, healAcc: 0, revived: false, mirror: false, healed: false, shield: CHARS[char].shield || 0 });
   ws.room = r; ws.slot = r.players.length - 1;
   send(ws, { type: 'joined', slot: ws.slot, room: code });
   if (r.players.length === 2) {
-    bc(r, { type: 'start', max: MAX_HP, players: r.players.map(p => ({ name: p.name, char: p.char, hp: p.hp, shield: p.shield })), badge: r.players.map(badge) });
+    bc(r, { type: 'start', max: MAX_HP, players: r.players.map(p => ({ name: p.name, char: p.char, hp: p.hp, shield: p.shield })), badge: r.players.map(badge), st: stats(r) });
     nextRound(r);
   }
 }
@@ -113,7 +140,27 @@ function finishRound(r) {
 
 function heal(p, slot, amount, ev) {
   const gained = Math.min(MAX_HP, p.hp + amount) - p.hp;
-  if (gained > 0) { p.hp += gained; p.healAcc += gained; ev.push({ t: 'heal', slot, v: gained }); }
+  if (gained > 0) { p.hp += gained; p.healAcc += gained; p.healed = true; ev.push({ t: 'heal', slot, v: gained }); }
+}
+
+// Satono Diamond: marks on player i explode. TRUE damage straight off HP: ignores shield, reductions, caps and Iron Mirror, and never counts as "being hit".
+// Explosions = 1 (guaranteed) + 1 per gapStep seconds Diamond won the round by (loser didn't finish -> every mark), limited by the marks present.
+// Every explosion is its own event so the client can show them one after another.
+function poisonTick(r, i, ev, gap, w) {
+  const v = r.players[i], dia = r.players[1 - i], pc = CHARS[dia.char].poison;
+  if (!pc || v.poison <= 0 || v.hp <= 0) return;
+  const each = poisonDmg(pc, r.round), oldMax = poisonMax(v, pc);
+  let n = 1;
+  if (w === 1 - i) n = gap == null ? v.poison : 1 + Math.floor(gap / pc.gapStep);
+  n = Math.min(n, v.poison);
+  for (let k = 1; k <= n; k++) ev.push({ t: 'dot', slot: i, v: each, k, n });
+  v.poison -= n; v.poisonHits += n;
+  v.hp = Math.max(0, v.hp - n * each);
+  const newMax = poisonMax(v, pc);
+  if (newMax > oldMax) { // every growEvery poison hits: +1 capacity and the Diamond heals
+    ev.push({ t: 'poisonCap', slot: i, v: newMax });
+    if (dia.hp > 0 && pc.capHeal) heal(dia, 1 - i, pc.capHeal * (newMax - oldMax), ev);
+  }
 }
 
 function resolve(r) {
@@ -124,7 +171,7 @@ function resolve(r) {
   const loserTime = r.results[1 - w];
   const gap = loserTime == null ? null : (loserTime - r.results[w]) / 1000; // seconds between winner and loser (null = loser didn't finish)
   const ev = [], hit = [0, 0], actualDamage = [0, 0];
-  let pierce = -1, counterHeal = 0;
+  let pierce = -1, counterHeal = 0, parried = -1, perfectHeal = 0; // parried = slot of the Meisho who parried this round
 
   // ---- Attacker's damage ----
   let dmg = DMG + att.bonus;
@@ -161,16 +208,39 @@ function resolve(r) {
     }
   }
   if (!immune) {
-    if (cd.parry && gap != null && gap <= cd.parry.gap) { // Meisho: lost by <= gap -> she takes 50%, attacker takes 100%
-      hit[1 - w] = Math.round(dmg / 2); hit[w] = dmg;
-      ev.push({ t: 'reflect', slot: 1 - w });
+    const pr = cd.parry;
+    if (pr && gap != null && gap <= def.parryGap) { // Meisho: lost by <= her current window -> parry
+      parried = 1 - w;
+      if (gap <= pr.perfect.gap) { // PERFECT parry: attacker takes x2, her damage becomes healing
+        hit[w] = Math.round(dmg * pr.perfect.reflect);
+        perfectHeal = Math.round(dmg * pr.perfect.healFrac);
+        ev.push({ t: 'perfect', slot: 1 - w, v: hit[w] });
+      } else { // normal parry: she takes 50%, attacker takes 100%
+        hit[1 - w] = Math.round(dmg / 2); hit[w] = dmg;
+        ev.push({ t: 'reflect', slot: 1 - w });
+      }
     } else hit[1 - w] = dmg;
   }
 
   // ---- Apply damage, then per-player effects ----
   r.players.forEach((p, i) => {
     const c = CHARS[p.char];
-    if (hit[i] > 0) {
+    if (c.parry) { // Meisho's window: reset on parry, otherwise grows (+growAtk on a win, +growHit on a loss)
+      const pr = c.parry;
+      p.parryGap = parried === i ? pr.gap : Math.round((p.parryGap + (i === w ? pr.growAtk : pr.growHit)) * 10) / 10;
+    }
+    if (hit[i] > 0 && c.seed && p.seed > 0) { // Almond Eye: each seed cuts the incoming hit (never below 1)
+      const red = Math.min(hit[i] - 1, p.seed * c.seed.reduce);
+      if (red > 0) { hit[i] -= red; ev.push({ t: 'seedguard', slot: i, v: red }); }
+    }
+    if (hit[i] > 0 && c.reduction && p.red > 0) { // Tokai Teio: % damage reduction on incoming hits (never below 1)
+      const cut = hit[i] - Math.max(1, Math.round(hit[i] * (1 - p.red / 100)));
+      if (cut > 0) { hit[i] -= cut; ev.push({ t: 'redguard', slot: i, v: cut }); }
+    }
+    if (hit[i] > 0 && c.ironMirror && p.mirror) { // Iron Mirror: incoming damage -> heal, effect consumed (shield untouched)
+      const v = hit[i]; p.mirror = false; hit[i] = 0; p.noHit = 0;
+      ev.push({ t: 'mirror', slot: i, v }); heal(p, i, v, ev);
+    } else if (hit[i] > 0) {
       const absorbed = pierce === i ? 0 : Math.min(p.shield, hit[i]);
       p.shield -= absorbed;
       let toHp = hit[i] - absorbed;
@@ -179,9 +249,19 @@ function resolve(r) {
       p.hp = Math.max(0, p.hp - toHp);
       p.noHit = 0;
     } else p.noHit++;
+    poisonTick(r, i, ev, gap, w); // Satono Diamond's marks (true damage, separate from normal hits)
     if (p.hp <= 0 && c.revive && !p.revived) { p.hp = c.revive; p.revived = true; p.noHit = 0; ev.push({ t: 'revive', slot: i }); }
     if (p.hp <= 0) return;
+    if (perfectHeal > 0 && i === parried) heal(p, i, perfectHeal, ev); // Meisho perfect parry: would-be damage -> heal
     if (c.heal && p.noHit >= c.heal.after) { heal(p, i, c.heal.amount, ev); p.noHit = 0; }
+    if (c.seed && i === w) { // Almond Eye: +1 seed per win; reaching the burst count -> seeds burst and heal
+      p.seed++;
+      if (p.seed >= c.seed.burst) {
+        p.seed = 0;
+        ev.push({ t: 'seedburst', slot: i, v: c.seed.heal });
+        heal(p, i, c.seed.heal, ev);
+      } else ev.push({ t: 'seed', slot: i, v: p.seed });
+    }
     if (c.timeHeal && i === w) { // heal by time gap (min 1, max cap); loser didn't finish -> max
       const t = c.timeHeal;
       heal(p, i, gap == null ? t.max : Math.min(t.max, Math.max(1, Math.round(gap * t.mult))), ev);
@@ -195,12 +275,32 @@ function resolve(r) {
       const gain = Math.min(extra * c.lenBonus.shield, c.lenBonus.cap - p.shield);
       if (gain > 0) { p.shield += gain; ev.push({ t: 'shield', slot: i, v: gain }); }
     }
+    if (c.reduction && i === w) { // Tokai Teio: each attack strips `step`% of her reduction; at 0% each attack gives permanent +bonus damage
+      if (p.red > 0) p.red = Math.max(0, p.red - c.reduction.step);
+      else { p.bonus += c.reduction.bonus; ev.push({ t: 'ramp', slot: i, v: c.reduction.bonus }); }
+    }
     if (c.ramp && r.round % c.ramp.every === 0) { p.bonus += c.ramp.amount; ev.push({ t: 'ramp', slot: i, v: c.ramp.amount }); }
   });
 
+  // ---- Satono Diamond: winning puts a poison mark on the enemy (it can only explode from the next round on) ----
+  if (ca.poison && def.hp > 0) {
+    const add = Math.min(ca.poison.perWin, poisonMax(def, ca.poison) - def.poison); // capped by the enemy's mark capacity
+    if (add > 0) { def.poison += add; ev.push({ t: 'poisonMark', slot: 1 - w, v: def.poison, add }); }
+    else ev.push({ t: 'poisonFull', slot: 1 - w });
+  }
+
+  // ---- Iron Mirror check: every Nth round, if the enemy did not heal during the window -> activate ----
+  r.players.forEach((p, i) => {
+    const c = CHARS[p.char];
+    if (c.ironMirror && r.round % c.ironMirror.every === 0 && p.hp > 0 && !p.mirror && !r.players[1 - i].healed) {
+      p.mirror = true; ev.push({ t: 'mirrorOn', slot: i });
+    }
+  });
+  if (r.round % 5 === 0) r.players.forEach(p => p.healed = false); // new 5-round window
+
   bc(r, {
     type: 'result', winner: w, hit, actualDamage, ev,
-    hp: r.players.map(p => p.hp), shield: r.players.map(p => p.shield), badge: r.players.map(badge), times: r.results
+    hp: r.players.map(p => p.hp), shield: r.players.map(p => p.shield), badge: r.players.map(badge), st: stats(r), times: r.results
   });
   const d0 = r.players[0].hp <= 0, d1 = r.players[1].hp <= 0;
   if (d0 || d1) {
@@ -212,6 +312,7 @@ function resolve(r) {
 }
 
 function leave(ws) {
+  unqueue(ws);
   const r = ws.room; if (!r) return;
   clearTimeout(r.timer);
   if (rooms.get(r.code) === r) rooms.delete(r.code);

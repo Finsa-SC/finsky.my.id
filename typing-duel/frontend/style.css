@@ -2,7 +2,7 @@
    Palette: pink #ff5fa8, sky #3ec6ff, mint #7bf1a8, gold #ffd54a, navy #14284d */
 :root{
   --pink:#ff5fa8; --pink-d:#c23a85; --sky:#3ec6ff; --mint:#7bf1a8; --gold:#ffd54a;
-  --navy:#14284d; --ink:#0b1f38; --white:#fff;
+  --navy:#14284d; --ink:#0b1f38; --white:#fff; --dock:84px;
   --font:"Trebuchet MS","Segoe UI","Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --outline:2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink),0 3px 0 var(--ink);
 }
@@ -11,11 +11,27 @@ body{background:#1b3d67;color:var(--white);font-family:var(--font);font-weight:8
 button,input{font:inherit}
 [hidden]{display:none!important}
 
-/* ---------- Lobby ---------- */
+/* ---------- Per-hero theme: color pair, badge shape, animation. Used only by the skill dock / aura ---------- */
+.h-daiwa-scarlet{--fx:#ff4b4b;--fx2:#ffa63c;--anim:flicker;--shape:polygon(50% 0,72% 30%,92% 55%,76% 100%,24% 100%,8% 55%,28% 30%)}                         /* flame */
+.h-special-week{--fx:#ff8fc8;--fx2:#8fdcff;--anim:pulse;--shape:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}      /* star */
+.h-meisho-dotto{--fx:#b58cff;--fx2:#ffd1ff;--anim:shimmer;--shape:polygon(0 0,100% 0,100% 60%,50% 100%,0 60%)}                                               /* shield */
+.h-haru-urara{--fx:#ffe14a;--fx2:#ff8fb8;--anim:blink;--shape:polygon(40% 0,100% 0,60% 40%,90% 40%,30% 100%,45% 55%,10% 55%)}                                /* bolt */
+.h-almond-eye{--fx:#8cf5b8;--fx2:#fff3a0;--anim:breathe;--shape:circle(50%)}                                                                                 /* leaves (see .lv) */
+.h-agnes-tachyon{--fx:#a56bff;--fx2:#ffe04a;--anim:shimmer;--shape:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%)}                                    /* hex flask */
+.h-tokai-teio{--fx:#3ea8ff;--fx2:#ffd54a;--anim:pulse;--shape:polygon(0 100%,0 20%,25% 55%,50% 0,75% 55%,100% 20%,100% 100%)}                                  /* crown */
+.h-oguri-cap{--fx:#cfd8e6;--fx2:#7a8aa6;--anim:breathe;--shape:polygon(10% 20%,40% 0,80% 10%,100% 45%,85% 90%,40% 100%,5% 75%)}                                /* rock */
+.h-tm-opera-o{--fx:#e0508a;--fx2:#8a4cff;--anim:breathe;--shape:polygon(0 0,100% 0,85% 50%,100% 100%,0 100%,15% 50%)}                                          /* ribbon */
+.h-gold-ship{--fx:#ffd54a;--fx2:#ff7a3c;--anim:wobble;--shape:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}                            /* octagon */
+.h-matikanefukukitaru{--fx:#ffa31f;--fx2:#fff1a8;--anim:blink;--shape:polygon(0 30%,60% 30%,60% 0,100% 50%,60% 100%,60% 70%,0 70%)}                            /* arrow */
+.h-gentildonna{--fx:#7fe8ff;--fx2:#c9a6ff;--anim:shimmer;--shape:polygon(50% 0,100% 50%,50% 100%,0 50%)}                                                       /* mirror diamond */
+.h-satono-diamond{--fx:#a6ff3d;--fx2:#9b5cff;--anim:shimmer;--shape:polygon(25% 0,75% 0,100% 35%,50% 100%,0 35%)}                                    /* gem */
+
+/* ---------- Lobby (original look) ---------- */
 #lobby{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.8vh,18px);padding:2vh 4vw;
   background:linear-gradient(#0b1f3855,#0b1f3899),url(assets/tracen-background.jpg) center/cover}
 #lobby h1{font-size:clamp(32px,5.5vh,56px);font-style:italic;letter-spacing:3px;color:var(--white);
   text-shadow:var(--outline),0 0 18px var(--pink);transform:skewX(-6deg)}
+.sub{margin-top:-6px;font-size:clamp(12px,1.8vh,16px);text-shadow:var(--outline);letter-spacing:1px}
 .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 input{padding:12px 18px;width:min(300px,42vw);background:var(--white);color:var(--navy);
   border:3px solid var(--pink);border-radius:999px;outline:none}
@@ -27,6 +43,10 @@ button{padding:12px 40px;background:linear-gradient(#ff9ccf,var(--pink));color:v
 button:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--pink-d)}
 button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--pink-d)}
 button:disabled{opacity:.6;cursor:default;transform:none}
+/* quick match button: sky-blue twin of the pink main button */
+#quick{background:linear-gradient(#8fe3ff,var(--sky));text-shadow:0 2px 0 #1b86b5;box-shadow:0 4px 0 #1b86b5}
+#quick:hover{box-shadow:0 6px 0 #1b86b5}
+#quick:active{box-shadow:0 1px 0 #1b86b5}
 
 /* Character grid: wraps to more columns instead of growing taller, scrolls when really full */
 #chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;
@@ -34,13 +54,16 @@ button:disabled{opacity:.6;cursor:default;transform:none}
   background:#ffffffd9;border:4px solid var(--white);border-radius:22px;box-shadow:0 6px 0 #0b1f3866}
 #chars::-webkit-scrollbar{width:10px}
 #chars::-webkit-scrollbar-thumb{background:var(--pink);border-radius:10px}
-.card{padding:8px 6px;background:linear-gradient(#fff,#e8f4ff);border:3px solid #bfdcff;border-radius:16px;cursor:pointer;
+.card{position:relative;padding:8px 6px;background:linear-gradient(#fff,#e8f4ff);border:3px solid #bfdcff;border-radius:16px;cursor:pointer;
   text-align:center;font-size:13px;color:var(--navy);transition:transform .12s,border-color .12s}
 .card:hover{transform:translateY(-3px)}
 .card img{width:100%;height:clamp(70px,13vh,120px);object-fit:contain}
 .card.sel{border-color:var(--pink);background:linear-gradient(#fff,#ffe3f1);box-shadow:0 0 0 3px #ff5fa855}
+.card.sel::after{content:"✓";position:absolute;top:-8px;right:-8px;width:24px;height:24px;display:grid;place-items:center;
+  background:linear-gradient(#ff9ccf,var(--pink));border:2px solid #fff;color:#fff;border-radius:50%;font-size:14px;text-shadow:0 1px 0 var(--pink-d)}
 #desc{padding:8px 22px;max-width:min(900px,92vw);text-align:center;font-size:clamp(13px,1.8vh,16px);
   background:#14284dcc;border:2px solid var(--white);border-radius:999px;color:var(--white)}
+#desc b{display:block;font-style:italic;color:var(--gold)}
 #msg{color:#ffb3cf;text-shadow:0 2px 0 var(--ink)}
 #desc:empty,#msg:empty{display:none}
 
@@ -54,10 +77,17 @@ button:disabled{opacity:.6;cursor:default;transform:none}
   background:linear-gradient(#fff,#d9efff);border:3px solid var(--sky);border-radius:10px;transform:skewX(-8deg);box-shadow:0 3px 0 #0b1f3855}
 .hud.r b{background:linear-gradient(#fff,#ffe0ef);border-color:var(--pink)}
 .hud span{display:block;font-size:clamp(12px,1.8vh,15px);text-shadow:var(--outline)}
-.bar{height:clamp(18px,3vh,26px);margin:8px 0 4px;background:#0b1f38aa;border:3px solid var(--white);border-radius:999px;overflow:hidden;
+.bar{position:relative;height:clamp(18px,3vh,26px);margin:8px 0 4px;background:#0b1f38aa;border:3px solid var(--white);border-radius:999px;overflow:hidden;
   box-shadow:0 3px 0 #0b1f3866}
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(#8fe3ff,var(--sky));border-radius:999px;transition:width .5s}
 .r .bar i{background:linear-gradient(#ff9ccf,var(--pink));margin-left:auto}
+.hud.low .bar{animation:lowHp .8s ease-in-out infinite}
+.hud.low .bar i{background:linear-gradient(#ffb0b0,#ff4d4d)}
+@keyframes lowHp{50%{box-shadow:0 0 16px #ff4d4d,0 3px 0 #0b1f3866}}
+
+#rnd{position:absolute;top:2.5vh;left:50%;padding:4px 22px;font-size:clamp(13px,2vh,20px);font-style:italic;color:var(--navy);letter-spacing:2px;
+  background:linear-gradient(var(--white),var(--gold));border:3px solid var(--white);border-radius:10px;transform:translateX(-50%) skewX(-8deg);box-shadow:0 3px 0 #0b1f3866}
+#rnd:empty{display:none}
 
 #word{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;
   font-size:clamp(40px,6.5vw,88px);font-style:italic;letter-spacing:.08em;color:var(--white);
@@ -69,41 +99,155 @@ button:disabled{opacity:.6;cursor:default;transform:none}
   padding:6px 26px;font-size:clamp(14px,2.2vh,22px);text-align:center;white-space:nowrap;
   background:#14284dcc;border:2px solid var(--white);border-radius:999px}
 #info:empty{display:none}
+#timer{position:absolute;top:calc(30% + clamp(40px,8vh,80px) + 48px);left:50%;width:min(480px,56vw);height:10px;transform:translateX(-50%);
+  background:#0b1f38aa;border:2px solid var(--white);border-radius:999px;overflow:hidden;opacity:0;transition:opacity .3s}
+#timer.on{opacity:1}
+#timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--mint),var(--gold),#ff6a6a)}
 
-/* Characters scale with the screen and stand on the floor line (20px gap from bottom) */
-.char{position:absolute;bottom:23px;left:8vw;width:min(22vw,300px);height:min(42vh,360px);transition:transform .15s}
+/* Characters stand on the floor line, which sits above the skill dock */
+.char{position:absolute;bottom:calc(var(--dock) + 3px);left:8vw;width:min(22vw,300px);height:min(42vh,360px);transition:transform .15s}
 .char.r{left:auto;right:8vw}
 .char img{width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 6px #0b1f3888)}
 .char.r img{transform:scaleX(-1)}
-/* lunge: the attacker stops short of the center line, whatever the screen size */
 .char.l0{transform:translateX(calc(38vw - 100%))}
 .char.l1{transform:translateX(calc(100% - 38vw))}
 .char.hit{animation:shake .4s}
 @keyframes shake{25%{translate:-14px}75%{translate:14px}}
 
-.floor{position:absolute;left:0;right:0;bottom:20px;height:4px;background:linear-gradient(90deg,var(--sky),var(--white),var(--pink));
+/* Aura while any skill is active (color comes from the hero theme) */
+.char.aura img{animation:aura 1.5s ease-in-out infinite}
+@keyframes aura{
+  0%,100%{filter:drop-shadow(0 0 6px var(--fx)) drop-shadow(0 6px 6px #0b1f3888)}
+  50%{filter:drop-shadow(0 0 22px var(--fx)) drop-shadow(0 0 40px var(--fx2)) drop-shadow(0 6px 6px #0b1f3888)}}
+/* Gentildonna: Iron Mirror bubble */
+.char.h-gentildonna.aura::after{content:"";position:absolute;inset:-3% 4% 0;pointer-events:none;
+  border:3px solid #d4f8ff;border-radius:50% 50% 10% 10%/55% 55% 8% 8%;
+  background:linear-gradient(115deg,#fff0 30%,#ffffff88 48%,#fff0 62%),radial-gradient(circle at 30% 20%,#ffffff66,#7fe8ff22 65%);
+  background-size:250% 100%,auto;box-shadow:0 0 26px #7fe8ff,inset 0 0 26px #c9a6ff88;animation:mirrorSweep 2.2s linear infinite}
+@keyframes mirrorSweep{to{background-position:-150% 0,0 0}}
+
+.floor{position:absolute;left:0;right:0;bottom:var(--dock);height:4px;background:linear-gradient(90deg,var(--sky),var(--white),var(--pink));
   box-shadow:0 0 12px #ffffff99}
 
-.pop{position:absolute;bottom:calc(min(42vh,360px) + 30px);font-size:clamp(22px,3.4vh,34px);font-style:italic;color:var(--white);
-  text-shadow:var(--outline),0 0 12px var(--pink);animation:up 1.2s forwards}
-@keyframes up{to{transform:translateY(-60px);opacity:0}}
+/* ---------- Skill dock (below the floor line) ---------- */
+#dock{position:absolute;left:0;right:0;bottom:0;height:var(--dock);background:linear-gradient(#0b1f38b8,#0b1f38f2)}
+.fx{position:absolute;bottom:0;top:0;left:24px;width:47vw;display:flex;gap:10px;align-items:center;flex-wrap:wrap;align-content:center}
+.fx.r{left:auto;right:24px;justify-content:flex-end}
+.chip{position:relative;display:flex;align-items:center;gap:9px;padding:6px 14px 6px 7px;min-height:52px;overflow:hidden;
+  background:#14284d99;border:2px solid #ffffff44;border-radius:14px;filter:grayscale(.85);opacity:.6;transition:opacity .3s,filter .3s,border-color .3s}
+.chip em{flex:none;width:36px;height:36px;display:grid;place-items:center;font-style:normal;font-size:18px;
+  background:linear-gradient(var(--fx2),var(--fx));clip-path:var(--shape)}
+.chip b{display:block;font-size:12px;font-style:italic;white-space:nowrap}
+.chip small{display:block;font-size:11px;opacity:.9;white-space:nowrap}
+.chip p{display:flex;gap:3px;margin-top:3px}
+.chip s{width:10px;height:10px;background:#ffffff33;clip-path:var(--shape);transition:background .2s}
+.chip s.f{background:linear-gradient(var(--fx2),var(--fx))}
+.chip.used{opacity:.35}
+.chip.on{opacity:1;filter:none;border-color:var(--fx);
+  background:linear-gradient(135deg,#14284dee,color-mix(in srgb,var(--fx) 38%,#14284d));
+  box-shadow:0 0 14px var(--fx),inset 0 0 12px color-mix(in srgb,var(--fx) 50%,transparent);
+  animation:var(--anim) 1.4s ease-in-out infinite}
+.chip.on::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,#fff0 35%,#ffffff66 50%,#fff0 65%);
+  transform:translateX(-120%);animation:sweep 2.2s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{60%,100%{transform:translateX(120%)}}
+@keyframes flicker{0%,100%{filter:brightness(1)}30%{filter:brightness(1.4) saturate(1.3)}60%{filter:brightness(.92)}80%{filter:brightness(1.3)}}
+@keyframes pulse{50%{transform:scale(1.06)}}
+@keyframes breathe{50%{filter:brightness(1.3)}}
+@keyframes blink{0%,100%{filter:brightness(1)}10%,30%{filter:brightness(2)}20%{filter:brightness(1)}}
+@keyframes wobble{25%{transform:rotate(-1.5deg)}75%{transform:rotate(1.5deg)}}
+@keyframes shimmer{50%{filter:brightness(1.25) hue-rotate(18deg)}}
 
-#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+/* ---------- Almond Eye: Holy Seed = two leaves (silver = empty, green = seed, burst = both pop) ---------- */
+.chip em.lv{width:auto;height:36px;padding:0 3px;gap:2px;display:flex;align-items:flex-end;position:relative;background:none;clip-path:none}
+.lf{display:block;width:17px;height:27px;border-radius:100% 0 100% 0;transform:rotate(-12deg);
+  background:linear-gradient(135deg,#f4f7fb,#8794ab);box-shadow:inset 0 0 0 1.5px #ffffffb0,0 2px 0 #0b1f3855;transition:background .25s}
+.lf:nth-child(2){transform:scaleX(-1) rotate(-12deg)}
+.lf.g{background:linear-gradient(135deg,#f3ffd0,#35d07a);box-shadow:inset 0 0 0 1.5px #fff,0 0 12px #8cf5b8;animation:leafPop .45s ease-out}
+@keyframes leafPop{0%{scale:.35}60%{scale:1.3}100%{scale:1}}
+.lv.burst .lf{animation:leafBurst .9s ease-out forwards}
+@keyframes leafBurst{
+  0%{scale:1;opacity:1;filter:brightness(1)}
+  35%{scale:1.5;filter:brightness(1.8)}
+  100%{scale:2.6;opacity:0;filter:brightness(2.2)}}
+.lv.burst::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;
+  background:radial-gradient(#fff,#8cf5b8 50%,#0000 72%);animation:seedRing .9s ease-out forwards}
+@keyframes seedRing{to{scale:8;opacity:0}}
+
+/* ---------- Satono Diamond poison: marks UI beside the head + toxic cloud on the poisoned character ---------- */
+.pz{position:absolute;left:100%;top:6%;z-index:3;margin-left:8px}
+.char.r .pz{left:auto;right:100%;margin:0 8px 0 0}
+.vial{position:relative;display:flex;flex-direction:column-reverse;width:32px;padding:4px;gap:3px;
+  background:linear-gradient(90deg,#ffffff2a,#ffffff0a 45%,#ffffff2a);border:3px solid #d8ecffcc;border-radius:9px 9px 16px 16px;
+  box-shadow:0 0 10px #9b5cff66,inset 0 0 8px #0b1f3899}
+.vial::before{content:"";position:absolute;left:-5px;right:-5px;top:-10px;height:7px;border-radius:4px;background:linear-gradient(#e8f4ff,#9fb6d6);border:2px solid #d8ecffcc}
+.vial .seg{display:block;height:22px;border-radius:5px;background:#0b1f3866;border:1px dashed #ffffff33;transform-origin:bottom}
+.vial .seg.f{border:1px solid #eaff9a;background:linear-gradient(#c8ff6a,#4fd01f 70%,#2f9a14);box-shadow:0 0 10px #a6ff3d,inset 0 0 6px #eaffb0aa;animation:liquid 1.8s ease-in-out infinite}
+@keyframes liquid{50%{filter:brightness(1.25)}}
+.vial .seg.new{animation:segIn .5s ease-out,liquid 1.8s ease-in-out infinite}
+@keyframes segIn{0%{scale:1 0;opacity:0}60%{scale:1.15 1.1;opacity:1}100%{scale:1 1}}
+.pz.boom .vial{animation:vialBoom .7s ease-out}
+@keyframes vialBoom{0%{translate:0 0}20%{translate:-4px 0;filter:brightness(2)}40%{translate:4px 0}60%{translate:-3px 0}100%{translate:0 0;filter:none}}
+.char.poisoned img{filter:drop-shadow(0 0 8px #a6ff3d) drop-shadow(0 6px 6px #0b1f3888)}
+.char.poisoned::before{content:"";position:absolute;left:6%;right:6%;bottom:0;height:78%;pointer-events:none;z-index:1;border-radius:50% 50% 12% 12%/40% 40% 8% 8%;
+  background:radial-gradient(circle at 28% 78%,#b8ff5acc 0 5px,#0000 6px),radial-gradient(circle at 72% 62%,#c98bffcc 0 4px,#0000 5px),
+    radial-gradient(circle at 48% 36%,#b8ff5aaa 0 3px,#0000 4px),radial-gradient(ellipse at 50% 90%,#7a2cff55,#a6ff3d22 55%,#0000 72%);
+  animation:toxic 2.4s ease-in infinite}
+@keyframes toxic{0%{translate:0 14px;opacity:.15}30%{opacity:.95}100%{translate:0 -26px;opacity:.1}}
+
+/* ---------- Pop-ups, flash, overlay ---------- */
+.pop{position:absolute;bottom:calc(min(42vh,360px) + var(--dock) + 12px);font-size:clamp(22px,3.4vh,34px);font-style:italic;color:var(--white);
+  text-shadow:var(--outline),0 0 12px var(--pink);animation:up .75s ease-out forwards}
+@keyframes up{0%{transform:translateY(10px) scale(.7);opacity:0}15%{transform:translateY(0) scale(1.15);opacity:1}70%{opacity:1}100%{transform:translateY(-46px) scale(1);opacity:0}}
+.pop.dmg{color:#ff4d4d;text-shadow:var(--outline),0 0 12px #ff4d4d}
+.pop.heal{color:#7bf1a8;text-shadow:var(--outline),0 0 12px #7bf1a8}
+.pop.shield{color:#ffd54a;text-shadow:var(--outline),0 0 12px #ffd54a}
+.pop.perfect{color:#ffe98a;text-shadow:var(--outline),0 0 14px #b58cff,0 0 26px #ffd1ff}
+.pop.poison{color:#c8ff6a;text-shadow:var(--outline),0 0 12px #9b5cff,0 0 20px #a6ff3d}
+/* damage-over-time text (poison explosions): its own color, different from normal damage */
+.pop.dot{color:#c07bff;text-shadow:var(--outline),0 0 12px #7a2cff,0 0 24px #a6ff3d}
+.pop.mirror{color:#bff4ff;text-shadow:var(--outline),0 0 14px #7fe8ff,0 0 24px #c9a6ff}
+
+/* Flashbang (Haru Urara): hard white-out, then the veil fades while the word drifts with double-vision ghosts */
+#flash{position:absolute;inset:0;z-index:30;background:#fff;opacity:0;pointer-events:none}
 #flash.on{opacity:1}
+#flash.fade{animation:flashFade var(--daze,1400ms) ease-out forwards}
+@keyframes flashFade{0%{opacity:.92}35%{opacity:.6}100%{opacity:0}}
 
-#over{position:absolute;inset:0;display:flex;flex-direction:column;gap:28px;align-items:center;justify-content:center;
-  background:radial-gradient(circle,#14284df2,#0b1f38f7)}
+#game.dazed #word{z-index:40;filter:blur(1.2px);animation:dizzy 1.1s ease-in-out infinite;
+  -webkit-box-reflect:below 6px linear-gradient(transparent 35%,#ffffff66)}
+@keyframes dizzy{
+  0%,100%{translate:0 0;rotate:0deg}
+  20%{translate:28px -12px;rotate:-2.5deg}
+  45%{translate:-24px 10px;rotate:2deg}
+  70%{translate:16px 18px;rotate:-1.5deg}}
+#game.dazed #word::before,#game.dazed #word::after{content:attr(data-t);position:absolute;left:0;top:0;z-index:-1;pointer-events:none;opacity:.55}
+#game.dazed #word::before{color:var(--sky);animation:ghostL .8s ease-in-out infinite alternate}
+#game.dazed #word::after{color:var(--pink);animation:ghostR .95s ease-in-out infinite alternate}
+@keyframes ghostL{from{translate:-34px 6px}to{translate:18px -10px}}
+@keyframes ghostR{from{translate:30px -6px}to{translate:-20px 12px}}
+#game.dazed #info{filter:blur(1px)}
+
+#over{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;gap:22px;align-items:center;justify-content:center;
+  background:radial-gradient(circle,#14284df2,#0b1f38f7);overflow:hidden}
+#verdict{font-size:clamp(20px,3.4vh,32px);letter-spacing:8px;font-style:italic;text-shadow:var(--outline)}
+#over.win #verdict{color:var(--gold)} #over.lose #verdict{color:#9fb0cf}
 #over h2{padding:10px 48px;font-size:clamp(32px,6vh,56px);font-style:italic;color:var(--white);
   background:linear-gradient(90deg,var(--sky),var(--pink));border:4px solid var(--white);border-radius:14px;
   transform:skewX(-8deg);text-shadow:0 3px 0 var(--ink);box-shadow:0 6px 0 #0b1f3888}
+#over.win h2{background:linear-gradient(90deg,var(--gold),var(--pink))}
+#over.lose h2{background:linear-gradient(90deg,#5a6b8c,#2b3a5c)}
+.confetti{position:absolute;top:-20px;width:10px;height:16px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 
 /* Shield overlay on the HP bar */
-.bar{position:relative}
 .bar u{position:absolute;top:0;bottom:0;left:0;width:0;opacity:0;text-decoration:none;
   background:repeating-linear-gradient(-45deg,#fff2b0 0 6px,#ffc933 6px 12px);
   box-shadow:inset 0 0 0 2px #fff,0 0 10px #ffd54a;
   transition:left .5s,width .5s,opacity .3s;animation:shieldGlow 1.4s ease-in-out infinite}
 @keyframes shieldGlow{50%{filter:brightness(1.25)}}
 
-.pop.dmg{color:#ff4d4d;text-shadow:var(--outline),0 0 12px #ff4d4d}
-.pop.heal{color:#7bf1a8;text-shadow:var(--outline),0 0 12px #7bf1a8}
+@media (max-width:700px){
+  :root{--dock:120px}
+  .fx{width:calc(50vw - 18px);left:12px;gap:6px}.fx.r{right:12px}
+  .chip small{display:none}
+}
