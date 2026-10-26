@@ -22,7 +22,7 @@
   {
     "id": "meisho-dotto",
     "name": "Meisho Dotto",
-    "desc": "Good Reflect: Window parry mulai 0,3 detik, naik 0,1 jika menang / 0,2 jika kalah tanpa parry, reset saat parry terpicu. Kalah dalam window: damage -50% dan dipantulkan 100%. Perfect Parry (selisih ≤0,3 detik): pantulan x2 dan damage yang harusnya diterima jadi heal",
+    "desc": "Good Reflect: Window parry mulai 0,3 detik, naik 0,1 jika menang / 0,2 jika kalah tanpa parry, reset saat parry terpicu. Kalah dalam window: damage -50% dan dipantulkan 100%. Perfect Parry (selisih ≤0,3 detik): pantulan x1.5 dan damage yang harusnya diterima jadi heal",
     "sprites": {
       "idle": "idle.png",
       "damaged": "damaged.gif",
@@ -62,7 +62,7 @@
   {
     "id": "tokai-teio",
     "name": "Tokai Teio",
-    "desc": "Anger of Warrior: Mulai dengan damage reduction 50%, tiap menyerang berkurang 5%. Saat reduction 0%, tiap menyerang damage +1 permanen. Tiap ronde kelipatan 3, damage +1 permanen",
+    "desc": "Anger of Warrior: Mulai dengan damage reduction 50%, tiap menyerang berkurang 10%. Saat reduction 0%, tiap menyerang damage +1 permanen. Tiap ronde kelipatan 3, damage +1 permanen",
     "sprites": {
       "idle": "idle.gif",
       "damaged": "damaged.gif",

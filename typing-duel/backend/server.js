@@ -45,13 +45,46 @@ wss.on('connection', ws => {
     let m; try { m = JSON.parse(raw); } catch { return; }
     if (m.type === 'join' && !ws.room && !ws.queued) join(ws, m);
     else if (m.type === 'quick' && !ws.room && !ws.queued) quick(ws, m);
+    else if (m.type === 'training' && !ws.room && !ws.queued) training(ws, m);
     else if (m.type === 'cancel' && ws.queued) unqueue(ws);
     else if (m.type === 'done' && ws.room) done(ws, m);
-    else if (m.type === 'typo' && ws.room) typo(ws, m);
+    else if (m.type === 'typo' && ws.room) typo_(ws, m);
   });
   ws.on('close', () => leave(ws));
 });
 setInterval(() => wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }), 30000);
+
+// ---- Training mode: lawan bot. Bot = "socket" palsu yang tidak mengirim apa-apa, lalu `done` dijadwalkan sesuai kecepatan ketik orang biasa ----
+const rand = (a, b) => a + Math.random() * (b - a);
+// Level bot. WPM ≈ cps × 12. Normal ±40-70 WPM, Hard ±90-110 WPM (setara typist yang jago, bukan monster).
+const BOTS = {
+  normal: { react: [350, 650], cps: [3.5, 6],   typoChance: 0.25, typoCost: 350 },
+  hard:   { react: [250, 420], cps: [7.5, 9.5], typoChance: 0.10, typoCost: 300 }
+};
+function training(ws, m) {
+  if (!CHARS[m.char]) return send(ws, { type: 'error', msg: 'Karakter tidak dikenal server.' });
+  const ids = Object.keys(CHARS);
+  const botChar = ids[Math.floor(Math.random() * ids.length)];      // selalu acak
+  const level = m.level === 'hard' ? 'hard' : 'normal';
+  const botWs = { readyState: 1, send() {}, isBot: true, level };
+  let code; do { code = 'T' + Math.random().toString(36).slice(2, 9).toUpperCase(); } while (rooms.has(code));
+  join(ws, { room: code, name: m.name, char: m.char });
+  join(botWs, { room: code, name: level === 'hard' ? 'Bot (Hard)' : 'Bot', char: botChar });
+}
+
+function botPlay(r, slot, flashMs) {
+  const p = r.players[slot], round = r.round, B = BOTS[p.ws.level] || BOTS.normal;
+  const react = rand(...B.react);
+  const perChar = 1000 / rand(...B.cps);
+  let time = react + r.word.length * perChar + flashMs;      // kena flashbang = lebih lambat
+  const typo = chance(B.typoChance);
+  if (typo) time += B.typoCost;
+  const first = react + flashMs + 100;
+  setTimeout(() => {
+    if (typo) typo_(p.ws, { round });
+    done(p.ws, { round, time, first });
+  }, COUNTDOWN + Math.min(time, ROUND_TIME + SLACK));
+}
 
 // ---- Quick match: players wait in a FIFO queue; as soon as two are waiting they get a private auto-generated room ----
 const queue = [];
@@ -102,6 +135,7 @@ function nextRound(r) {
   const fl = c => chance(c.flash) ? (c.flashMs || 1000) : 0;
   const flash = [fl(CHARS[r.players[1].char]), fl(CHARS[r.players[0].char])];
   bc(r, { type: 'round', round: r.round, word: r.word, countdown: COUNTDOWN, limit: ROUND_TIME, flash });
+  r.players.forEach((p, i) => { if (p.ws.isBot) botPlay(r, i, flash[i]); });
   r.timer = setTimeout(() => finishRound(r), COUNTDOWN + ROUND_TIME + SLACK);
 }
 
@@ -117,7 +151,7 @@ function done(ws, m) {
 }
 
 // Client reports every wrong key. Used for Daiwa's clean win and Haru's instant flashbang.
-function typo(ws, m) {
+function typo_(ws, m) {
   const r = ws.room;
   if (r.state !== 'play' || m.round !== r.round || r.results[ws.slot] != null) return;
   r.typos[ws.slot]++;

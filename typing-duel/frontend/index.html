@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Typing Duel</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
     <link rel="stylesheet" href="/typing-duel/style.css">
 </head>
 <body>
+    <input id="kb" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-hidden="true" tabindex="-1">
     <section id="lobby">
         <h1>Typing Duel</h1>
         <p class="sub">Ketik cepat, serang duluan, menangkan lomba!</p>
@@ -19,6 +20,8 @@
         <div class="row">
             <button id="go">Masuk arena</button>
             <button id="quick">Cari lawan cepat</button>
+            <button class="train" data-level="normal">Latihan: Normal</button>
+            <button class="train" data-level="hard">Latihan: Hard</button>
         </div>
         <p id="msg"></p>
     </section>

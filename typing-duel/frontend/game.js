@@ -4,6 +4,12 @@ const $ = s => document.querySelector(s);
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + API + '/ws';
 const DAZE_MS = 1400; // how long the dizzy afterimage lasts after the white flash ends (visual only, server timing is unchanged)
 
+const vv = window.visualViewport;
+const fit = () => { document.documentElement.style.setProperty('--vh', (vv ? vv.height : innerHeight) + 'px'); scrollTo(0, 0); };
+fit();
+(vv || window).addEventListener('resize', fit);
+if (vv) vv.addEventListener('scroll', fit);
+
 let chars = [], sel, ws, slot, players;
 let max = 100, word = '', typed = 0, startT = 0, firstT = null, limit = 10000, active = false, round = 0, typos = 0;
 let stat = [{}, {}], shields = [0, 0];                // server-side status per player (for the skill dock)
@@ -110,6 +116,8 @@ function pick(id) {
 
 let queued = false;
 function connect(first) {
+    $('#kb').focus();
+    ws = new WebSocket(WS_URL);
     ws = new WebSocket(WS_URL);
     ws.onopen = () => ws.send(JSON.stringify(first));
     ws.onmessage = e => handle(JSON.parse(e.data));
@@ -118,8 +126,17 @@ function connect(first) {
 }
 function lobbyIdle() {
     queued = false;
-    $('#go').disabled = false; $('#quick').disabled = false; $('#quick').textContent = 'Cari lawan cepat';
+    $('#go').disabled = false; $('#quick').disabled = false;
+    document.querySelectorAll('.train').forEach(b => b.disabled = false);
+    $('#quick').textContent = 'Cari lawan cepat';
 }
+
+document.querySelectorAll('.train').forEach(b => b.onclick = () => {
+    $('#go').disabled = true; $('#quick').disabled = true;
+    document.querySelectorAll('.train').forEach(x => x.disabled = true);
+    $('#msg').style.color = '#ffffff'; $('#msg').textContent = 'Menyiapkan latihan...';
+    connect({ type: 'training', name: $('#name').value, char: sel, level: b.dataset.level });
+});
 
 $('#go').onclick = () => {
     const room = $('#room').value.trim();
@@ -240,15 +257,15 @@ function renderWord() {
         `<span class="d">${word.slice(0, typed)}</span><span class="c">${word[typed] || ''}</span>` + word.slice(typed + 1);
 }
 
-document.addEventListener('keydown', e => {
-    if (!active || e.ctrlKey || e.metaKey || e.key.length !== 1) return;
-    e.preventDefault();
-    if (e.key.toLowerCase() === word[typed]) {
+const kb = $('#kb');
+
+function typeChar(ch) {
+    if (ch === word[typed]) {
         typed++; renderWord();
-        if (typed === 1) { firstT = performance.now() - startT; renderFx(slot); } // time to the first correct letter (Quick Draw)
+        if (typed === 1) { firstT = performance.now() - startT; renderFx(slot); }
         if (typed === word.length) {
             active = false;
-            const time = performance.now() - startT; // client-side timing
+            const time = performance.now() - startT;
             ws.send(JSON.stringify({ type: 'done', round, time, first: firstT }));
             $('#info').textContent = `Selesai ${(time / 1000).toFixed(2)}s, menunggu lawan...`;
             renderFx(slot);
@@ -259,7 +276,18 @@ document.addEventListener('keydown', e => {
         const w = $('#word'); w.classList.add('bad');
         setTimeout(() => w.classList.remove('bad'), 120);
     }
+}
+
+// Semua input (keyboard fisik maupun virtual) lewat event input
+kb.addEventListener('input', () => {
+    const v = kb.value.toLowerCase(); kb.value = '';
+    if (!active) return;
+    for (const ch of v) { if (!active) break; if (/\s/.test(ch)) continue; typeChar(ch); }
 });
+
+// Kalau fokus hilang (klik di tempat lain / ketuk layar), fokuskan lagi
+$('#game').addEventListener('click', () => kb.focus());
+document.addEventListener('keydown', () => { if (active && document.activeElement !== kb) kb.focus(); });
 
 // Pop-ups are queued per side and shown one at a time, so heal / damage / skill texts never overlap.
 const POP_MS = 750;                       // must match the .pop animation duration in style.css

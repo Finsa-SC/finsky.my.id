@@ -11,7 +11,7 @@ module.exports = {
   // Parry window starts at gap (0.3s), +growAtk when she wins, +growHit when she loses without parrying, resets to gap when a parry triggers.
   // Lose by <= window -> parry: she takes 50%, attacker takes 100%.
   // Lose by <= perfect.gap -> PERFECT parry: attacker takes damage x reflect, she takes 0 and heals (damage she would have taken * healFrac).
-  'meisho-dotto':  { parry: { gap: 0.3, growAtk: 0.1, growHit: 0.2, perfect: { gap: 0.3, reflect: 2, healFrac: 0.5 } } },
+  'meisho-dotto':  { parry: { gap: 0.3, growAtk: 0.1, growHit: 0.2, perfect: { gap: 0.3, reflect: 1.5, healFrac: 0.5 } } },
 
   // 30% flashbang at the start of each round + instant flashbang on every enemy typo
   'haru-urara':    { flash: 0.30, flashMs: 200, typoFlash: true },
@@ -23,7 +23,7 @@ module.exports = {
   'agnes-tachyon': { timeHeal: { mult: 8, max: 8 } },                 // win -> heal = time gap (s) * 8, min 1, max 8
   // Anger of Warrior: starts with 50% damage reduction; every attack strips 5% of it. At 0% every attack gives permanent +1 damage.
   // Also every 3rd round -> permanent +1 damage.
-  'tokai-teio':    { reduction: { start: 50, step: 5, bonus: 1 }, ramp: { every: 3, amount: 1 } },
+  'tokai-teio':    { reduction: { start: 50, step: 10, bonus: 1 }, ramp: { every: 3, amount: 1 } },
   'oguri-cap':     { shield: 20, brokenCap: 8 },                      // 20 shield; any damage reaching HP capped at 8
 
   // Win -> shield = 12% of missing HP (max 10 per win, total cap 30). While shielded: +1 damage per 5 shield.

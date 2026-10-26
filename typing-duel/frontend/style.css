@@ -3,13 +3,20 @@
 :root{
   --pink:#ff5fa8; --pink-d:#c23a85; --sky:#3ec6ff; --mint:#7bf1a8; --gold:#ffd54a;
   --navy:#14284d; --ink:#0b1f38; --white:#fff; --dock:84px;
+  /* --vh diset oleh game.js (tinggi area yang kelihatan, di atas keyboard virtual); fallback 100vh */
+  --H:var(--vh,100vh);
+  --ch:min(calc(var(--H)*.42),360px);            /* tinggi karakter */
   --font:"Trebuchet MS","Segoe UI","Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --outline:2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink),0 3px 0 var(--ink);
 }
 *{box-sizing:border-box;margin:0}
-body{background:#1b3d67;color:var(--white);font-family:var(--font);font-weight:800;overflow:hidden}
+html{-webkit-text-size-adjust:100%}
+body{background:#1b3d67;color:var(--white);font-family:var(--font);font-weight:800;overflow:hidden;touch-action:manipulation}
 button,input{font:inherit}
 [hidden]{display:none!important}
+
+/* Input tersembunyi: dipakai untuk memunculkan keyboard virtual di HP */
+#kb{position:fixed;left:0;bottom:0;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none;font-size:16px}
 
 /* ---------- Per-hero theme: color pair, badge shape, animation. Used only by the skill dock / aura ---------- */
 .h-daiwa-scarlet{--fx:#ff4b4b;--fx2:#ffa63c;--anim:flicker;--shape:polygon(50% 0,72% 30%,92% 55%,76% 100%,24% 100%,8% 55%,28% 30%)}                         /* flame */
@@ -27,13 +34,13 @@ button,input{font:inherit}
 .h-satono-diamond{--fx:#a6ff3d;--fx2:#9b5cff;--anim:shimmer;--shape:polygon(25% 0,75% 0,100% 35%,50% 100%,0 35%)}                                    /* gem */
 
 /* ---------- Lobby (original look) ---------- */
-#lobby{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.8vh,18px);padding:2vh 4vw;
+#lobby{height:var(--H);overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.8vh,18px);padding:2vh 4vw;
   background:linear-gradient(#0b1f3855,#0b1f3899),url(assets/tracen-background.jpg) center/cover}
 #lobby h1{font-size:clamp(32px,5.5vh,56px);font-style:italic;letter-spacing:3px;color:var(--white);
   text-shadow:var(--outline),0 0 18px var(--pink);transform:skewX(-6deg)}
-.sub{margin-top:-6px;font-size:clamp(12px,1.8vh,16px);text-shadow:var(--outline);letter-spacing:1px}
+.sub{margin-top:-6px;font-size:clamp(12px,1.8vh,16px);text-shadow:var(--outline);letter-spacing:1px;text-align:center}
 .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-input{padding:12px 18px;width:min(300px,42vw);background:var(--white);color:var(--navy);
+input{padding:12px 18px;width:min(300px,42vw);background:var(--white);color:var(--navy);font-size:16px; /* 16px: cegah iOS zoom saat fokus */
   border:3px solid var(--pink);border-radius:999px;outline:none}
 input::placeholder{color:#7a8fb3}
 input:focus{border-color:var(--sky);box-shadow:0 0 0 4px #3ec6ff55}
@@ -47,9 +54,16 @@ button:disabled{opacity:.6;cursor:default;transform:none}
 #quick{background:linear-gradient(#8fe3ff,var(--sky));text-shadow:0 2px 0 #1b86b5;box-shadow:0 4px 0 #1b86b5}
 #quick:hover{box-shadow:0 6px 0 #1b86b5}
 #quick:active{box-shadow:0 1px 0 #1b86b5}
+/* training buttons: mint (Normal) and gold (Hard) */
+.train{background:linear-gradient(#b5ffd3,var(--mint));color:var(--navy);text-shadow:none;box-shadow:0 4px 0 #3fae71}
+.train:hover{box-shadow:0 6px 0 #3fae71}
+.train:active{box-shadow:0 1px 0 #3fae71}
+.train[data-level="hard"]{background:linear-gradient(#fff0a8,var(--gold));box-shadow:0 4px 0 #c79a12}
+.train[data-level="hard"]:hover{box-shadow:0 6px 0 #c79a12}
+.train[data-level="hard"]:active{box-shadow:0 1px 0 #c79a12}
 
 /* Character grid: wraps to more columns instead of growing taller, scrolls when really full */
-#chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;
+#chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;flex:none;
   width:min(1000px,92vw);max-height:44vh;overflow-y:auto;padding:14px;
   background:#ffffffd9;border:4px solid var(--white);border-radius:22px;box-shadow:0 6px 0 #0b1f3866}
 #chars::-webkit-scrollbar{width:10px}
@@ -61,14 +75,14 @@ button:disabled{opacity:.6;cursor:default;transform:none}
 .card.sel{border-color:var(--pink);background:linear-gradient(#fff,#ffe3f1);box-shadow:0 0 0 3px #ff5fa855}
 .card.sel::after{content:"✓";position:absolute;top:-8px;right:-8px;width:24px;height:24px;display:grid;place-items:center;
   background:linear-gradient(#ff9ccf,var(--pink));border:2px solid #fff;color:#fff;border-radius:50%;font-size:14px;text-shadow:0 1px 0 var(--pink-d)}
-#desc{padding:8px 22px;max-width:min(900px,92vw);text-align:center;font-size:clamp(13px,1.8vh,16px);
+#desc{flex:none;padding:8px 22px;max-width:min(900px,92vw);text-align:center;font-size:clamp(13px,1.8vh,16px);
   background:#14284dcc;border:2px solid var(--white);border-radius:999px;color:var(--white)}
 #desc b{display:block;font-style:italic;color:var(--gold)}
-#msg{color:#ffb3cf;text-shadow:0 2px 0 var(--ink)}
+#msg{color:#ffb3cf;text-shadow:0 2px 0 var(--ink);text-align:center}
 #desc:empty,#msg:empty{display:none}
 
 /* ---------- Game ---------- */
-#game{position:relative;width:100vw;height:100vh;overflow:hidden;
+#game{position:relative;width:100vw;height:var(--H);overflow:hidden;
   background:linear-gradient(#0b1f3833,#0b1f3866),url(assets/tracen-background.jpg) center/cover}
 
 .hud{position:absolute;top:2.5vh;left:24px;width:38vw}
@@ -105,7 +119,7 @@ button:disabled{opacity:.6;cursor:default;transform:none}
 #timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--mint),var(--gold),#ff6a6a)}
 
 /* Characters stand on the floor line, which sits above the skill dock */
-.char{position:absolute;bottom:calc(var(--dock) + 3px);left:8vw;width:min(22vw,300px);height:min(42vh,360px);transition:transform .15s}
+.char{position:absolute;bottom:calc(var(--dock) + 3px);left:8vw;width:min(22vw,300px);height:var(--ch);transition:transform .15s}
 .char.r{left:auto;right:8vw}
 .char img{width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 6px #0b1f3888)}
 .char.r img{transform:scaleX(-1)}
@@ -113,6 +127,9 @@ button:disabled{opacity:.6;cursor:default;transform:none}
 .char.l1{transform:translateX(calc(100% - 38vw))}
 .char.hit{animation:shake .4s}
 @keyframes shake{25%{translate:-14px}75%{translate:14px}}
+
+/* Carats yang dilempar dari penyerang ke target */
+.carats{position:absolute;top:0;left:0;z-index:5;pointer-events:none}
 
 /* Aura while any skill is active (color comes from the hero theme) */
 .char.aura img{animation:aura 1.5s ease-in-out infinite}
@@ -195,7 +212,7 @@ button:disabled{opacity:.6;cursor:default;transform:none}
 @keyframes toxic{0%{translate:0 14px;opacity:.15}30%{opacity:.95}100%{translate:0 -26px;opacity:.1}}
 
 /* ---------- Pop-ups, flash, overlay ---------- */
-.pop{position:absolute;bottom:calc(min(42vh,360px) + var(--dock) + 12px);font-size:clamp(22px,3.4vh,34px);font-style:italic;color:var(--white);
+.pop{position:absolute;bottom:calc(var(--ch) + var(--dock) + 12px);font-size:clamp(22px,3.4vh,34px);font-style:italic;color:var(--white);
   text-shadow:var(--outline),0 0 12px var(--pink);animation:up .75s ease-out forwards}
 @keyframes up{0%{transform:translateY(10px) scale(.7);opacity:0}15%{transform:translateY(0) scale(1.15);opacity:1}70%{opacity:1}100%{transform:translateY(-46px) scale(1);opacity:0}}
 .pop.dmg{color:#ff4d4d;text-shadow:var(--outline),0 0 12px #ff4d4d}
@@ -246,8 +263,61 @@ button:disabled{opacity:.6;cursor:default;transform:none}
   transition:left .5s,width .5s,opacity .3s;animation:shieldGlow 1.4s ease-in-out infinite}
 @keyframes shieldGlow{50%{filter:brightness(1.25)}}
 
-@media (max-width:700px){
-  :root{--dock:120px}
-  .fx{width:calc(50vw - 18px);left:12px;gap:6px}.fx.r{right:12px}
-  .chip small{display:none}
+/* ======================================================================
+   HP / layar sempit (portrait) atau pendek (landscape, atau ada keyboard virtual)
+   ====================================================================== */
+@media (max-width:700px),(max-height:500px){
+  :root{--dock:60px;--ch:calc(var(--H)*.26)}
+
+  /* Lobby: bisa di-scroll, tombol fleksibel */
+  #lobby{justify-content:flex-start;padding:14px 12px 24px;gap:10px}
+  #lobby h1{font-size:32px}
+  input{width:min(320px,88vw)}
+  .row{width:100%}
+  .row button{flex:1 1 140px;padding:12px 10px;font-size:15px}
+  #chars{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));max-height:34vh;gap:8px;padding:10px}
+  .card{font-size:11px}
+  .card img{height:clamp(56px,10vh,90px)}
+  #desc{border-radius:20px;padding:8px 14px}
+
+  /* HUD dua sisi, nama dipotong kalau panjang */
+  .hud{top:8px;left:10px;width:46vw}
+  .hud.r{left:auto;right:10px}
+  .hud b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;padding:2px 10px;border-width:2px}
+  .bar{height:16px;margin:5px 0 2px;border-width:2px}
+  .hud span{font-size:11px}
+
+  /* Round, kata, info, timer ditumpuk di tengah */
+  #rnd{top:74px;font-size:11px;padding:2px 14px;border-width:2px}
+  #word{top:calc(var(--H)*.40);font-size:clamp(30px,10vw,52px)}
+  #info{top:calc(var(--H)*.40 + 30px);font-size:12px;padding:3px 14px;max-width:92vw;white-space:normal}
+  #timer{top:calc(var(--H)*.40 + 64px);width:60vw;height:8px}
+
+  /* Karakter lebih kecil di pojok */
+  .char{width:30vw;left:3vw}
+  .char.r{left:auto;right:3vw}
+  .char.l0{transform:translateX(calc(64vw - 100%))}
+  .char.l1{transform:translateX(calc(100% - 64vw))}
+  .pop{font-size:18px}
+  .pz{margin-left:2px}
+  .char.r .pz{margin:0 2px 0 0}
+  .vial{width:22px;padding:3px}
+  .vial .seg{height:14px}
+
+  /* Dock ringkas: hanya ikon, tanpa teks */
+  .fx{width:48vw;left:8px;gap:6px}
+  .fx.r{right:8px}
+  .chip{padding:4px;min-height:44px;border-radius:12px}
+  .chip b,.chip small{display:none}
+  .chip em{width:30px;height:30px;font-size:15px}
+  .chip s{width:6px;height:6px}
+
+  /* Layar hasil */
+  #over{gap:14px;padding:0 16px}
+  #over h2{padding:8px 24px;font-size:28px;text-align:center}
+}
+
+/* Orang yang mematikan animasi di sistemnya */
+@media (prefers-reduced-motion:reduce){
+  .chip.on,.chip.on::after,.char.aura img,.hud.low .bar,.bar u{animation:none}
 }
