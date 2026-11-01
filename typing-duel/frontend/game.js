@@ -4,11 +4,17 @@ const $ = s => document.querySelector(s);
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + API + '/ws';
 const DAZE_MS = 1400; // how long the dizzy afterimage lasts after the white flash ends (visual only, server timing is unchanged)
 
+// Tinggi layar mengikuti area yang kelihatan (di atas keyboard virtual HP). iOS tidak mendukung `interactive-widget`, jadi pakai visualViewport.
 const vv = window.visualViewport;
 const fit = () => { document.documentElement.style.setProperty('--vh', (vv ? vv.height : innerHeight) + 'px'); scrollTo(0, 0); };
 fit();
 (vv || window).addEventListener('resize', fit);
 if (vv) vv.addEventListener('scroll', fit);
+
+// Error JavaScript ditampilkan di lobby supaya tidak gagal diam-diam
+addEventListener('error', e => { const m = $('#msg'); if (m) { m.style.color = ''; m.textContent = 'Error: ' + e.message; } });
+// input tersembunyi: memunculkan keyboard virtual dan menerima semua ketikan (dibuat otomatis kalau tidak ada di HTML)
+const kb = $('#kb') || document.body.appendChild(Object.assign(document.createElement('input'), { id: 'kb', autocomplete: 'off', autocapitalize: 'off', spellcheck: false }));
 
 let chars = [], sel, ws, slot, players;
 let max = 100, word = '', typed = 0, startT = 0, firstT = null, limit = 10000, active = false, round = 0, typos = 0;
@@ -115,22 +121,40 @@ function pick(id) {
 }
 
 let queued = false;
+// Tab di lobby: 'duel' (balapan 1 kata per ronde), 'marathon' (paling banyak mengetik dalam 60 detik), 'wpm' (tes solo)
+let mode = 'duel';
+const MODE_INFO = {
+    duel: 'Balapan ketik 1 kata per ronde. Yang tercepat menyerang, skill karakter aktif.',
+    marathon: 'Ketik kata sebanyak mungkin dalam 60 detik. Yang paling banyak menang. Skill karakter tidak dipakai.',
+    wpm: 'Tes kecepatan mengetik selama 1 menit. Hasilnya WPM dan akurasi.'
+};
+function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.mode').forEach(x => x.classList.toggle('sel', x.dataset.mode === m));
+    // Setiap bagian lobby punya data-modes="duel marathon ..." dan hanya tampil di mode yang cocok
+    document.querySelectorAll('[data-modes]').forEach(el => el.hidden = !el.dataset.modes.split(' ').includes(m));
+    const info = $('#modeInfo'); if (info) info.textContent = MODE_INFO[m];
+    $('#msg').textContent = '';
+}
+document.querySelectorAll('.mode').forEach(b => b.onclick = () => { if (!queued) setMode(b.dataset.mode); }); // jangan ganti mode saat sedang mengantre
+setMode(mode);
+
 function connect(first) {
-    $('#kb').focus();
-    ws = new WebSocket(WS_URL);
+    kb.focus(); // dipanggil dari klik tombol, jadi keyboard virtual HP boleh muncul
     ws = new WebSocket(WS_URL);
     ws.onopen = () => ws.send(JSON.stringify(first));
     ws.onmessage = e => handle(JSON.parse(e.data));
-    ws.onclose = () => { if (!$('#game').hidden) return; lobbyIdle(); };
+    ws.onclose = () => { if (!$('#game').hidden || !$('#run').hidden) return; lobbyIdle(); };
     ws.onerror = () => $('#msg').textContent = 'Tidak bisa terhubung ke server.';
 }
 function lobbyIdle() {
     queued = false;
     $('#go').disabled = false; $('#quick').disabled = false;
     document.querySelectorAll('.train').forEach(b => b.disabled = false);
-    $('#quick').textContent = 'Cari lawan cepat';
+    $('#quick').textContent = 'Cari lawan';
 }
 
+// Training mode: lawan bot (karakter bot acak dari server). Hanya untuk mode duel.
 document.querySelectorAll('.train').forEach(b => b.onclick = () => {
     $('#go').disabled = true; $('#quick').disabled = true;
     document.querySelectorAll('.train').forEach(x => x.disabled = true);
@@ -142,7 +166,7 @@ $('#go').onclick = () => {
     const room = $('#room').value.trim();
     if (!room) return $('#msg').textContent = 'Isi kode room dulu.';
     $('#go').disabled = true; $('#quick').disabled = true;
-    connect({ type: 'join', room, name: $('#name').value, char: sel });
+    connect({ type: 'join', room, name: $('#name').value, char: sel, mode });
 };
 
 // Quick match: no room code needed, the server pairs the next two waiting players. Click again to cancel.
@@ -150,7 +174,7 @@ $('#quick').onclick = () => {
     if (queued) { ws.send(JSON.stringify({ type: 'cancel' })); ws.close(); $('#msg').textContent = ''; return lobbyIdle(); }
     $('#go').disabled = true; $('#quick').disabled = true;
     $('#msg').style.color = '#ffffff'; $('#msg').textContent = 'Menghubungkan...';
-    connect({ type: 'quick', name: $('#name').value, char: sel });
+    connect({ type: 'quick', name: $('#name').value, char: sel, mode });
 };
 
 function handle(m) {
@@ -180,7 +204,14 @@ function handle(m) {
     else if (m.type === 'draw') { active = false; $('#timer').classList.remove('on'); $('#info').textContent = 'Waktu habis! Tidak ada pemenang, ronde diulang.'; }
     else if (m.type === 'result') showResult(m);
     else if (m.type === 'over') over(m.winner);
-    else if (m.type === 'left') over(null, 'Lawan keluar dari game.');
+    else if (m.type === 'mstart') raceStart(m);
+    else if (m.type === 'mprog') setLane(1 - slot, m.n);
+    else if (m.type === 'mover') raceOver(m);
+    else if (m.type === 'left') {
+        if (gameOver) return; // game sudah selesai: jangan timpa layar hasil
+        if (!$('#run').hidden) { gameOver = true; endRun(true); runResult('', 'Lawan keluar dari game.', ''); }
+        else over(null, 'Lawan keluar dari game.');
+    }
 }
 
 const setSprite = (i, st) => { $(`#c${i} img`).src = sprite(players[i].char, st); };
@@ -224,6 +255,7 @@ function startRound(m) {
         if (left <= 0) {
             renderWord();
             startT = performance.now(); active = true;
+            kb.focus();
             if (m.flash[slot]) flashScreen(m.flash[slot]);
             [0, 1].forEach(i => { if (m.flash[1 - i]) pulse(i, 'flash', 1200); }); // Haru's chip lights up when her flash lands
             $('#timer').classList.add('on');
@@ -257,15 +289,14 @@ function renderWord() {
         `<span class="d">${word.slice(0, typed)}</span><span class="c">${word[typed] || ''}</span>` + word.slice(typed + 1);
 }
 
-const kb = $('#kb');
-
+// ---------- Input: keyboard fisik dan virtual sama-sama lewat event `input` pada #kb ----------
 function typeChar(ch) {
     if (ch === word[typed]) {
         typed++; renderWord();
-        if (typed === 1) { firstT = performance.now() - startT; renderFx(slot); }
+        if (typed === 1) { firstT = performance.now() - startT; renderFx(slot); } // time to the first correct letter (Quick Draw)
         if (typed === word.length) {
             active = false;
-            const time = performance.now() - startT;
+            const time = performance.now() - startT; // client-side timing
             ws.send(JSON.stringify({ type: 'done', round, time, first: firstT }));
             $('#info').textContent = `Selesai ${(time / 1000).toFixed(2)}s, menunggu lawan...`;
             renderFx(slot);
@@ -278,16 +309,18 @@ function typeChar(ch) {
     }
 }
 
-// Semua input (keyboard fisik maupun virtual) lewat event input
 kb.addEventListener('input', () => {
     const v = kb.value.toLowerCase(); kb.value = '';
-    if (!active) return;
-    for (const ch of v) { if (!active) break; if (/\s/.test(ch)) continue; typeChar(ch); }
+    for (const ch of v) {
+        if (/\s/.test(ch)) continue;
+        if (!$('#run').hidden) runKey(ch);   // Tes WPM / Adu Banyak
+        else if (active) typeChar(ch);       // Duel
+    }
 });
-
 // Kalau fokus hilang (klik di tempat lain / ketuk layar), fokuskan lagi
 $('#game').addEventListener('click', () => kb.focus());
-document.addEventListener('keydown', () => { if (active && document.activeElement !== kb) kb.focus(); });
+$('#run').addEventListener('click', () => kb.focus());
+document.addEventListener('keydown', () => { if ((active || !$('#run').hidden) && document.activeElement !== kb) kb.focus(); });
 
 // Pop-ups are queued per side and shown one at a time, so heal / damage / skill texts never overlap.
 const POP_MS = 750;                       // must match the .pop animation duration in style.css
@@ -376,7 +409,7 @@ function showResult(m) {
     }, IMPACT + 1250);
 }
 
-function confetti() {
+function confetti(box = $('#over')) {
     const cols = ['#ff5fa8', '#3ec6ff', '#7bf1a8', '#ffd54a', '#fff'];
     for (let k = 0; k < 60; k++) {
         const el = document.createElement('div');
@@ -385,8 +418,124 @@ function confetti() {
         el.style.background = cols[k % cols.length];
         el.style.animationDuration = 2 + Math.random() * 2.5 + 's';
         el.style.animationDelay = Math.random() * 1.2 + 's';
-        $('#over').append(el);
+        box.append(el);
     }
+}
+
+// ---------- Mesin ketik daftar kata: Tes WPM (solo) & Adu Banyak (duel). Selesai 1 kata langsung lanjut ke kata berikutnya ----------
+const run = { on: false, mode: '', words: [], n: 0, typed: 0, ok: 0, bad: 0, dur: 60000, started: false, ended: false, t0: 0, final: null };
+const laneN = [0, 0];
+
+function startRun(m, words, dur) {
+    Object.assign(run, { on: m === 'wpm', mode: m, words, n: 0, typed: 0, ok: 0, bad: 0, dur, started: false, ended: false, t0: 0, final: null });
+    $('#lobby').hidden = true; $('#run').hidden = false; $('#rover').hidden = true;
+    $('#lanes').hidden = m !== 'race';
+    $('#rtime').textContent = Math.ceil(dur / 1000); $('#rbar i').style.width = '100%'; $('#rcount').textContent = '';
+    $('#rstat').textContent = m === 'wpm' ? 'Mulai mengetik untuk memulai waktu' : 'Bersiap...';
+    renderRun();
+}
+
+function renderRun() {
+    const w = run.on ? (run.words[run.n] || '') : '';
+    $('#rword').innerHTML = `<span class="d">${w.slice(0, run.typed)}</span><span class="c">${w[run.typed] || ''}</span>${w.slice(run.typed + 1)}`;
+    $('#rnext').textContent = run.on ? run.words.slice(run.n + 1, run.n + 5).join('   ') : '';
+    updateStats();
+}
+
+// WPM standar: 5 huruf benar = 1 kata. Akurasi = huruf benar / semua tekanan tombol.
+function updateStats() {
+    if (!run.started) return;
+    const el = Math.max(performance.now() - run.t0, 1000), tot = run.ok + run.bad;
+    $('#rstat').textContent = `${Math.round(run.ok / 5 / (el / 60000))} WPM  |  ${tot ? Math.round(run.ok / tot * 100) : 100}% akurasi  |  ${run.n} kata`;
+}
+
+function beginClock() { run.started = true; run.t0 = performance.now(); runTick(); }
+function runTick() {
+    if (!run.started || run.ended) return;
+    const left = run.dur - (performance.now() - run.t0);
+    $('#rtime').textContent = Math.max(0, Math.ceil(left / 1000));
+    $('#rbar i').style.width = Math.max(0, left / run.dur * 100) + '%';
+    updateStats();
+    if (left <= 0) return endRun();
+    setTimeout(runTick, 100);
+}
+
+function runKey(ch) {
+    if (!run.on || run.ended) return;
+    const w = run.words[run.n]; if (!w) return;
+    if (!run.started) beginClock();                       // Tes WPM: waktu mulai di huruf pertama
+    if (ch === w[run.typed]) {
+        run.ok++;
+        if (++run.typed === w.length) {
+            run.n++; run.typed = 0;
+            if (run.mode === 'race') { ws.send(JSON.stringify({ type: 'mw', n: run.n })); setLane(slot, run.n); }
+        }
+    } else {
+        run.bad++;
+        const el = $('#rword'); el.classList.add('bad'); setTimeout(() => el.classList.remove('bad'), 120);
+    }
+    renderRun();
+}
+
+function endRun(silent) {
+    if (run.ended) return;
+    run.ended = true; run.on = false;
+    const tot = run.ok + run.bad;
+    run.final = { wpm: Math.round(run.ok / 5 / (run.dur / 60000)), acc: tot ? Math.round(run.ok / tot * 100) : 0, n: run.n };
+    if (silent) return;
+    if (run.mode === 'wpm') runResult('TES WPM', 'Selesai!', '');
+    else $('#rstat').textContent = 'Waktu habis! Menunggu hasil...';
+}
+
+function runResult(verdict, title, cls, sub = '') {
+    const f = run.final || { wpm: 0, acc: 0, n: run.n };
+    $('#rverdict').textContent = verdict; $('#rover h2').textContent = title; $('#rsub').textContent = sub;
+    $('#rres').innerHTML = [[f.wpm, 'WPM'], [f.acc + '%', 'Akurasi'], [f.n, 'Kata']].map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join('');
+    $('#rover').className = cls; $('#rover').hidden = false;
+    if (cls === 'win') confetti($('#rover'));
+}
+
+// ---- Tes WPM (solo, tanpa server game; kata diambil lewat HTTP) ----
+$('#wpm').onclick = async () => {
+    kb.focus();                                           // harus di dalam klik supaya keyboard HP muncul
+    $('#msg').style.color = '#ffffff'; $('#msg').textContent = 'Menyiapkan kata...';
+    try { startRun('wpm', await (await fetch(API + '/words')).json(), 60000); $('#msg').textContent = ''; }
+    catch { $('#msg').style.color = ''; $('#msg').textContent = 'Gagal mengambil kata dari server.'; }
+};
+
+// ---- Adu Banyak (duel 60 detik: siapa paling banyak menyelesaikan kata) ----
+function setLane(i, n) {
+    laneN[i] = n;
+    const top = Math.max(30, laneN[0], laneN[1]);
+    [0, 1].forEach(k => { $(`#ln${k} span`).textContent = laneN[k]; $(`#ln${k} i`).style.width = laneN[k] / top * 100 + '%'; });
+}
+
+function raceStart(m) {
+    players = m.players; gameOver = false;
+    startRun('race', m.words, m.time);
+    players.forEach((p, i) => {
+        $(`#ln${i} img`).src = sprite(p.char, 'idle');
+        $(`#ln${i} b`).textContent = p.name + (i === slot ? ' (kamu)' : '');
+    });
+    laneN[0] = laneN[1] = 0; setLane(0, 0);
+    const t0 = performance.now();
+    const tick = () => {
+        const left = m.countdown - (performance.now() - t0);
+        if (left <= 0) { $('#rcount').textContent = ''; $('#rstat').textContent = ''; run.on = true; kb.focus(); renderRun(); beginClock(); return; }
+        $('#rcount').textContent = Math.ceil(left / 1000);
+        setTimeout(tick, 50);
+    };
+    tick();
+}
+
+function raceOver(m) {
+    gameOver = true; endRun(true);
+    setLane(0, m.counts[0]); setLane(1, m.counts[1]);
+    const w = m.winner;
+    runResult(w == null ? 'DRAW' : w === slot ? 'VICTORY' : 'DEFEAT',
+        w == null ? 'Seri!' : `${players[w].name} menang!`,
+        w == null ? '' : w === slot ? 'win' : 'lose',
+        `Kamu ${m.counts[slot]} : ${m.counts[1 - slot]} Lawan (jumlah kata)`);
 }
 
 function over(winner, text) {

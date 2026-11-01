@@ -24,9 +24,17 @@ const status = (p, opp, round) => {
 };
 const stats = r => r.players.map((p, i) => status(p, r.players[1 - i], r.round + 1));
 
+// ---- Daftar kata acak (dipakai Tes WPM lewat HTTP dan mode Marathon lewat WebSocket) ----
+function wordList(n) {
+  const out = new Set();
+  while (out.size < n) randomWords({ exactly: n, maxLength: 9 }).forEach(w => { if (out.size < n && w.length >= 4 && /^[a-z]+$/.test(w)) out.add(w); });
+  return [...out];
+}
+
 const server = http.createServer((req, res) => {
   const url = decodeURIComponent(req.url.split('?')[0]);
   if (url === '/typing-duel/api/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end('{"ok":true}'); }
+  if (url === '/typing-duel/api/words') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(wordList(200))); }
   if (STATIC) {
     const f = path.join(STATIC, url === '/' ? 'index.html' : url);
     if (f.startsWith(STATIC) && fs.existsSync(f) && fs.statSync(f).isFile()) {
@@ -43,18 +51,21 @@ wss.on('connection', ws => {
   ws.isAlive = true; ws.on('pong', () => ws.isAlive = true);
   ws.on('message', raw => {
     let m; try { m = JSON.parse(raw); } catch { return; }
-    if (m.type === 'join' && !ws.room && !ws.queued) join(ws, m);
-    else if (m.type === 'quick' && !ws.room && !ws.queued) quick(ws, m);
-    else if (m.type === 'training' && !ws.room && !ws.queued) training(ws, m);
-    else if (m.type === 'cancel' && ws.queued) unqueue(ws);
-    else if (m.type === 'done' && ws.room) done(ws, m);
-    else if (m.type === 'typo' && ws.room) typo_(ws, m);
+    try { // satu pesan aneh tidak boleh menjatuhkan seluruh server
+      if (m.type === 'join' && !ws.room && !ws.queued) join(ws, m);
+      else if (m.type === 'quick' && !ws.room && !ws.queued) quick(ws, m);
+      else if (m.type === 'training' && !ws.room && !ws.queued) training(ws, m);
+      else if (m.type === 'cancel' && ws.queued) unqueue(ws);
+      else if (m.type === 'done' && ws.room) done(ws, m);
+      else if (m.type === 'typo' && ws.room) typo_(ws, m);
+      else if (m.type === 'mw' && ws.room) mword(ws, m);
+    } catch (e) { console.error('handler error:', e); }
   });
   ws.on('close', () => leave(ws));
 });
 setInterval(() => wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }), 30000);
 
-// ---- Training mode: lawan bot. Bot = "socket" palsu yang tidak mengirim apa-apa, lalu `done` dijadwalkan sesuai kecepatan ketik orang biasa ----
+// ---- Training mode: lawan bot. Bot = "socket" palsu yang tidak mengirim apa-apa, lalu `done` dijadwalkan sesuai kecepatan ketik ----
 const rand = (a, b) => a + Math.random() * (b - a);
 // Level bot. WPM ≈ cps × 12. Normal ±40-70 WPM, Hard ±90-110 WPM (setara typist yang jago, bukan monster).
 const BOTS = {
@@ -86,26 +97,59 @@ function botPlay(r, slot, flashMs) {
   }, COUNTDOWN + Math.min(time, ROUND_TIME + SLACK));
 }
 
-// ---- Quick match: players wait in a FIFO queue; as soon as two are waiting they get a private auto-generated room ----
-const queue = [];
-const unqueue = ws => { const k = queue.findIndex(q => q.ws === ws); if (k >= 0) queue.splice(k, 1); ws.queued = false; };
+// ---- Quick match: pemain menunggu di antrean FIFO (terpisah per mode); begitu ada dua orang mereka dapat room pribadi ----
+const queues = { duel: [], marathon: [] };
+const unqueue = ws => { for (const q of Object.values(queues)) { const k = q.findIndex(e => e.ws === ws); if (k >= 0) q.splice(k, 1); } ws.queued = false; };
 function quick(ws, m) {
   if (!CHARS[m.char]) return send(ws, { type: 'error', msg: 'Karakter tidak dikenal server.' });
-  while (queue.length && queue[0].ws.readyState !== 1) queue.shift(); // drop players who disconnected while waiting
+  const mode = m.mode === 'marathon' ? 'marathon' : 'duel', queue = queues[mode];
+  while (queue.length && queue[0].ws.readyState !== 1) queue.shift(); // buang pemain yang putus saat menunggu
   if (!queue.length) { queue.push({ ws, name: m.name, char: m.char }); ws.queued = true; return send(ws, { type: 'queued' }); }
   const other = queue.shift(); other.ws.queued = false;
   let code; do { code = 'Q' + Math.random().toString(36).slice(2, 9).toUpperCase(); } while (rooms.has(code));
-  join(other.ws, { room: code, name: other.name, char: other.char });
-  join(ws, { room: code, name: m.name, char: m.char });
+  join(other.ws, { room: code, name: other.name, char: other.char, mode });
+  join(ws, { room: code, name: m.name, char: m.char, mode });
+}
+
+// ---- Mode Marathon: 60 detik, kedua pemain dapat daftar kata yang sama, paling banyak menyelesaikan kata menang ----
+const MARA = { time: 60000, slack: 1500, words: 250, msPerChar: 50 }; // msPerChar: batas anti-cheat (~240 WPM)
+
+function startMarathon(r) {
+  r.words = wordList(MARA.words); r.counts = [0, 0]; r.chars = [0, 0]; r.state = 'play';
+  r.startAt = Date.now() + COUNTDOWN;
+  bc(r, { type: 'mstart', players: r.players.map(p => ({ name: p.name, char: p.char })), words: r.words, countdown: COUNTDOWN, time: MARA.time });
+  r.timer = setTimeout(() => endMarathon(r), COUNTDOWN + MARA.time + MARA.slack);
+}
+
+// Client melapor tiap selesai 1 kata (n = kata ke-berapa). Server cek urutan, jendela waktu, dan kecepatan kumulatif yang masuk akal.
+function mword(ws, m) {
+  const r = ws.room, i = ws.slot, now = Date.now();
+  if (r.mode !== 'marathon' || r.state !== 'play') return;
+  if (now < r.startAt - 200 || now > r.startAt + MARA.time + MARA.slack) return;
+  if (m.n !== r.counts[i] + 1 || !r.words[r.counts[i]]) return;
+  const chars = r.chars[i] + r.words[r.counts[i]].length;
+  if (chars * MARA.msPerChar > now - r.startAt + 400) return; // lebih cepat dari batas manusia (toleran terhadap jitter jaringan)
+  r.counts[i]++; r.chars[i] = chars;
+  send(r.players[1 - i].ws, { type: 'mprog', n: r.counts[i] });
+}
+
+function endMarathon(r) {
+  if (r.state !== 'play') return;
+  r.state = 'over';
+  const [a, b] = r.counts, winner = a > b ? 0 : b > a ? 1 : null; // sama banyak = seri
+  bc(r, { type: 'mover', counts: r.counts, winner });
+  rooms.delete(r.code);
 }
 
 function join(ws, m) {
   const code = String(m.room || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12).toUpperCase();
   if (!code) return send(ws, { type: 'error', msg: 'Kode room tidak valid.' });
-  let r = rooms.get(code);
-  if (!r) rooms.set(code, r = { code, players: [], state: 'wait', round: 0, results: [], firsts: [null, null], typos: [0, 0], flashUntil: [0, 0], used: [] });
-  if (r.players.length >= 2) return send(ws, { type: 'error', msg: 'Room sudah penuh.' });
   if (!CHARS[m.char]) return send(ws, { type: 'error', msg: 'Karakter tidak dikenal server.' });
+  const mode = m.mode === 'marathon' ? 'marathon' : 'duel';
+  let r = rooms.get(code);
+  if (r && r.mode !== mode) return send(ws, { type: 'error', msg: 'Room itu memakai mode lain.' });
+  if (r && r.players.length >= 2) return send(ws, { type: 'error', msg: 'Room sudah penuh.' });
+  if (!r) rooms.set(code, r = { code, mode, players: [], state: 'wait', round: 0, results: [], firsts: [null, null], typos: [0, 0], flashUntil: [0, 0], used: [] });
   const char = m.char;
   const name = String(m.name || '').trim().slice(0, 16) || 'Player ' + (r.players.length + 1);
   // bonus = permanent damage (Teio), stacks (Special Week), healAcc = HP healed since Gentildonna last countered, revived = Almond's one-time revive
@@ -114,6 +158,7 @@ function join(ws, m) {
   ws.room = r; ws.slot = r.players.length - 1;
   send(ws, { type: 'joined', slot: ws.slot, room: code });
   if (r.players.length === 2) {
+    if (r.mode === 'marathon') return startMarathon(r);
     bc(r, { type: 'start', max: MAX_HP, players: r.players.map(p => ({ name: p.name, char: p.char, hp: p.hp, shield: p.shield })), badge: r.players.map(badge), st: stats(r) });
     nextRound(r);
   }
@@ -142,7 +187,7 @@ function nextRound(r) {
 // Time is measured on the client (word shown -> last key). The server waits for both reports (or the time limit).
 function done(ws, m) {
   const r = ws.room, t = Number(m.time);
-  if (r.state !== 'play' || m.round !== r.round || r.results[ws.slot] != null) return;
+  if (r.mode !== 'duel' || r.state !== 'play' || m.round !== r.round || r.results[ws.slot] != null) return;
   if (!isFinite(t) || t < r.word.length * 30 || t > ROUND_TIME + SLACK) return; // implausible or over the limit -> ignore
   r.results[ws.slot] = t;
   const f = Number(m.first); // time to the first correct letter (client-side); under 80ms is not humanly possible -> ignore
@@ -153,7 +198,7 @@ function done(ws, m) {
 // Client reports every wrong key. Used for Daiwa's clean win and Haru's instant flashbang.
 function typo_(ws, m) {
   const r = ws.room;
-  if (r.state !== 'play' || m.round !== r.round || r.results[ws.slot] != null) return;
+  if (r.mode !== 'duel' || r.state !== 'play' || m.round !== r.round || r.results[ws.slot] != null) return;
   r.typos[ws.slot]++;
   const opp = CHARS[r.players[1 - ws.slot].char];
   if (opp.typoFlash && Date.now() >= r.flashUntil[ws.slot]) { // no stacking while a flash is still on screen
@@ -350,7 +395,8 @@ function leave(ws) {
   const r = ws.room; if (!r) return;
   clearTimeout(r.timer);
   if (rooms.get(r.code) === r) rooms.delete(r.code);
-  r.players.forEach(p => { if (p.ws !== ws) send(p.ws, { type: 'left' }); });
+  const was = r.state; r.state = 'over'; // hentikan timer bot / ronde yang masih tertunda
+  if (was !== 'over') r.players.forEach(p => { if (p.ws !== ws) send(p.ws, { type: 'left' }); }); // game sudah selesai: tidak perlu kabar "keluar"
 }
 
 server.listen(PORT, () => console.log('Typing Duel backend on :' + PORT));

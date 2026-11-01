@@ -4,25 +4,47 @@
     <meta charset="utf-8">
     <title>Typing Duel</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-    <link rel="stylesheet" href="/typing-duel/style.css">
+    <link rel="stylesheet" href="/typing-duel/style.css?v=3">
 </head>
 <body>
     <input id="kb" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-hidden="true" tabindex="-1">
+
     <section id="lobby">
         <h1>Typing Duel</h1>
         <p class="sub">Ketik cepat, serang duluan, menangkan lomba!</p>
-        <div class="row">
-            <input id="name" maxlength="16" placeholder="Nama kamu">
-            <input id="room" maxlength="12" placeholder="Kode room (bebas, mis. ARENA1)">
+
+        <input id="name" maxlength="16" placeholder="Nama kamu">
+
+        <!-- Pilih mode: bagian lobby lain menyesuaikan lewat data-modes -->
+        <div id="modes">
+            <button class="mode sel" data-mode="duel">Duel Cepat</button>
+            <button class="mode" data-mode="marathon">Adu Banyak</button>
+            <button class="mode" data-mode="wpm">Tes WPM</button>
         </div>
-        <div id="chars"></div>
-        <div id="desc"></div>
-        <div class="row">
-            <button id="go">Masuk arena</button>
-            <button id="quick">Cari lawan cepat</button>
-            <button class="train" data-level="normal">Latihan: Normal</button>
-            <button class="train" data-level="hard">Latihan: Hard</button>
+        <p id="modeInfo"></p>
+
+        <div id="chars" data-modes="duel marathon"></div>
+        <div id="desc" data-modes="duel marathon"></div>
+
+        <!-- Satu tombol utama per mode -->
+        <div class="actions">
+            <button id="quick" data-modes="duel marathon">Cari lawan</button>
+            <button id="wpm" data-modes="wpm">Mulai tes (1 menit)</button>
         </div>
+
+        <!-- Pilihan tambahan, ukurannya kecil -->
+        <div class="more" data-modes="duel marathon">
+            <div class="join">
+                <input id="room" maxlength="12" placeholder="Kode room (mis. ARENA1)">
+                <button id="go" class="mini">Masuk</button>
+            </div>
+            <div class="bots" data-modes="duel">
+                <span>Lawan bot:</span>
+                <button class="train mini" data-level="normal">Normal</button>
+                <button class="train mini" data-level="hard">Hard</button>
+            </div>
+        </div>
+
         <p id="msg"></p>
     </section>
 
@@ -48,6 +70,26 @@
         </div>
     </section>
 
-    <script src="/typing-duel/game.js"></script>
+    <section id="run" hidden>
+        <div id="lanes" hidden>
+            <div class="lane" id="ln0"><img><b></b><div class="lbar"><i></i></div><span>0</span></div>
+            <div class="lane r" id="ln1"><img><b></b><div class="lbar"><i></i></div><span>0</span></div>
+        </div>
+        <div id="rtime">60</div>
+        <div id="rbar"><i></i></div>
+        <div id="rword"></div>
+        <div id="rnext"></div>
+        <div id="rstat"></div>
+        <div id="rcount"></div>
+        <div id="rover" hidden>
+            <p id="rverdict"></p>
+            <h2></h2>
+            <p id="rsub"></p>
+            <div id="rres"></div>
+            <button onclick="location.reload()">Main lagi</button>
+        </div>
+    </section>
+
+    <script src="/typing-duel/game.js?v=3"></script>
 </body>
 </html>
