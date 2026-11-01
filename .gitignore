@@ -58,3 +58,5 @@ build/
 adguard/work/
 uptime-kuma/*.db-*
 uptime-kuma/*.db
+*secret*.yaml
+!*secret*.enc.yaml
