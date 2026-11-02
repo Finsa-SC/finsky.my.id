@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser-deploy
+  labels:
+    app: filebrowser
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filebrowser
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      containers:
+        - name: filebrowser
+          image: filebrowser/filebrowser:latest
+          volumeMounts:
+            - name: filebrowser-database
+              mountPath: /database
+            - name: filebrowser-drive
+              mountPath: /srv
+      volumes:
+        - name: filebrowser-database
+          persistentVolumeClaim:
+            claimName: filebrowser-db-pvc
+
+        - name: filebrowser-drive
+          persistentVolumeClaim:
+            claimName: filebrowser-drive-pvc
+
+status: {}
