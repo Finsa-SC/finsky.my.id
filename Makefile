@@ -34,6 +34,7 @@ down-adguard:
 	kubectl delete -k k8s/platform/adguard/
 
 up-filebrowser:
+	sops -d k8s/platform/filebrowser/secret.enc.yaml | kubectl apply -f -
 	kubectl apply -k k8s/platform/filebrowser/
 
 down-filebrowser:
