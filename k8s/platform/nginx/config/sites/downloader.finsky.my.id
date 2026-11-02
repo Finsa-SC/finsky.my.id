@@ -12,7 +12,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://downloader:8203/api/;
+        proxy_pass http://downloader-service:8203/api/;
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
