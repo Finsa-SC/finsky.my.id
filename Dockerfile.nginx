@@ -1,0 +1,7 @@
+FROM nginx:alpine
+LABEL authors="silence-suzuka"
+
+COPY errors/ /usr/share/nginx/html/errors/
+COPY portofolio/ /usr/share/nginx/html/portofolio/
+COPY downloader/frontend/ /usr/share/nginx/html/downloader/
+COPY typing-duel/frontend/ /usr/share/nginx/html/typing-duel/

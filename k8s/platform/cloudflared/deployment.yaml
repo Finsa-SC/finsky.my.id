@@ -16,13 +16,19 @@ spec:
         app: tunnel
     spec:
       containers:
-      - image: cloudflare/cloudflared:latest
-        name: cloudflared
-        resources: {}
-        env:
-          - name: TUNNEL_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: tunnel-secret
-                key: TUNNEL_TOKEN
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --no-autoupdate
+            - run
+            - --token
+            - "$(TUNNEL_TOKEN)"
+          resources: {}
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tunnel-secret
+                  key: TUNNEL_TOKEN
 status: {}
