@@ -1,4 +1,4 @@
-.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up down get
+.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up-downloader down-downloader up down get
 
 up-cloudflared:
 	sops -d k8s/platform/cloudflared/secret.enc.yaml | kubectl apply -f -
@@ -13,9 +13,15 @@ up-nginx:
 down-nginx:
 	kubectl delete -k k8s/platform/nginx/
 
-up:	up-cloudflared up-nginx
+up-downloader:
+	kubectl apply -k k8s/apps/downloader/
 
-down:	down-cloudflared down-nginx
+down-downloader:
+	kubectl apply -k k8s/apps/downloader/
+
+up:	up-cloudflared up-nginx up-downloader
+
+down:	down-cloudflared down-nginx down-downloader
 
 get:
 	kubectl get pods

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: downloader-deploy
+  labels:
+    app: downloader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: downloader
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: downloader
+    spec:
+      containers:
+      - image: finsasc/media-downloader:v1
+        name: media-downloader
+        resources: {}
+status: {}
