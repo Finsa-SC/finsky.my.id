@@ -3,17 +3,17 @@ kind: Deployment
 metadata:
   name: cloudflared-deploy
   labels:
-    app: tunnel
+    app: cloudflared
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tunnel
+      app: cloudflared
   strategy: {}
   template:
     metadata:
       labels:
-        app: tunnel
+        app: cloudflared
     spec:
       containers:
         - name: cloudflared

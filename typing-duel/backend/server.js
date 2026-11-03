@@ -399,4 +399,6 @@ function leave(ws) {
   if (was !== 'over') r.players.forEach(p => { if (p.ws !== ws) send(p.ws, { type: 'left' }); }); // game sudah selesai: tidak perlu kabar "keluar"
 }
 
-server.listen(PORT, () => console.log('Typing Duel backend on :' + PORT));
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Typing Duel backend running on 0.0.0.0:${PORT}`);
+});
