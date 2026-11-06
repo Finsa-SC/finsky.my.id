@@ -1,8 +1,8 @@
-.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up-downloader down-downloader up-kuma down-kuma up-adguard down-adguard up-filebrowser down-filebrowser up-typing-duel down-typing-duel up-game down-game up down get
+.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up-downloader down-downloader up-kuma down-kuma up-adguard down-adguard up-filebrowser down-filebrowser up-typing-duel down-typing-duel up-game down-game up-namespace down-namespace up down get
 
 ### === Cloudflared ===
 up-cloudflared:
-	sops -d k8s/platform/cloudflared/secret.enc.yaml | kubectl apply -f -
+	sops -d k8s/platform/cloudflared/secret.enc.yaml | kubectl apply -n finsky-platform -f -
 	kubectl apply -k k8s/platform/cloudflared/
 
 down-cloudflared:
@@ -10,6 +10,10 @@ down-cloudflared:
 
 ### === Nginx ===
 up-nginx:
+	kubectl rollout status deployment/downloader-deploy -n finsky-apps --timeout=120s
+	kubectl rollout status deployment/filebrowser-deploy -n finsky-platform --timeout=120s
+	kubectl rollout status deployment/adguard-deploy -n finsky-platform --timeout=120s
+	kubectl rollout status deployment/uptime-kuma-deploy -n finsky-platform --timeout=120s
 	kubectl apply -k k8s/platform/nginx/
 
 down-nginx:
@@ -40,11 +44,17 @@ down-adguard:
 
 ### === Filebrowser ===
 up-filebrowser:
-	sops -d k8s/platform/filebrowser/secret.enc.yaml | kubectl apply -f -
+	sops -d k8s/platform/filebrowser/secret.enc.yaml | kubectl apply -n finsky-platform -f -
 	kubectl apply -k k8s/platform/filebrowser/
 
 down-filebrowser:
 	kubectl delete -k k8s/platform/filebrowser/
+
+up-namespace:
+	kubectl apply -k k8s/namespaces/
+
+down-namespace:
+	kubectl delete -k k8s/namespaces/
 
 ### === Typing Game ===
 up-typing-duel:
@@ -59,9 +69,9 @@ up-game:	up-typing-duel
 down-game:	down-typing-duel
 
 ### === finsky.my.id ===
-up:	up-cloudflared up-nginx up-downloader up-kuma up-adguard up-filebrowser up-game
+up:	up-cloudflared up-downloader up-kuma up-adguard up-filebrowser up-game up-nginx
 
-down:	down-cloudflared down-nginx down-downloader down-kuma down-adguard down-filebrowser down-game
+down:	down-cloudflared down-downloader down-kuma down-adguard down-filebrowser down-game down-nginx
 
 get:
-	kubectl get pods
+	@kubectl get pods -A | grep "finsky" || echo "no pod found."

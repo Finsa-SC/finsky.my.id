@@ -1,0 +1,20 @@
+monitors:
+  - name: FinSky Main
+    type: http
+    url: https://finsky.my.id
+    interval: 300
+
+  - name: FinSky Media Downloader
+    type: http
+    url: https://downloader.finsky.my.id
+    interval: 120
+
+  - name: FinSky Drive
+    type: http
+    url: https://drive.finsky.my.id
+    interval: 60
+
+  - name: FinSky Game Center
+    type: http
+    url: https://game.finsky.my.id/typing-game/
+    interval: 120

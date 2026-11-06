@@ -7,11 +7,9 @@ metadata:
 spec:
   ports:
   - name: uptime-kuma-port
-    port: 8202
     protocol: TCP
-    targetPort: 3001
+    port: 8202
+    targetPort: kuma-port
   selector:
     app: uptime-kuma
   type: ClusterIP
-status:
-  loadBalancer: {}

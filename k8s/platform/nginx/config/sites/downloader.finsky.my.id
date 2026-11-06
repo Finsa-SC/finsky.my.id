@@ -7,12 +7,13 @@ server {
 
     root /usr/share/nginx/html/downloader;
     index index.html;
+
     location / {
         try_files $uri $uri/ =404;
     }
 
     location /api/ {
-        proxy_pass http://downloader-service:8203/api/;
+        proxy_pass http://downloader/api/;
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
