@@ -7,9 +7,9 @@ metadata:
 spec:
   ports:
   - name: typing-duel-port
-    port: 8204
     protocol: TCP
-    targetPort: 8204
+    port: 8204
+    targetPort: typing-port
   selector:
     app: typing-duel
   type: ClusterIP

@@ -32,7 +32,17 @@ function wordList(n) {
 }
 
 const server = http.createServer((req, res) => {
+  const start = Date.now();
   const url = decodeURIComponent(req.url.split('?')[0]);
+
+  // LOG DEBUGGING: Catat setiap request HTTP yang masuk ke Node.js
+  console.log(`[HTTP IN] ${req.method} ${req.url} | Headers:`, JSON.stringify(req.headers));
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[HTTP OUT] ${req.method} ${req.url} -> Status: ${res.statusCode} (${duration}ms)`);
+  });
+
   if (url === '/typing-duel/api/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end('{"ok":true}'); }
   if (url === '/typing-duel/api/words') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); return res.end(JSON.stringify(wordList(200))); }
   if (STATIC) {
@@ -42,16 +52,26 @@ const server = http.createServer((req, res) => {
       return fs.createReadStream(f).pipe(res);
     }
   }
+  console.log(`[HTTP 404] Not Found: ${url}`);
   res.writeHead(404); res.end();
 });
 
-const wss = new WebSocketServer({ server, path: '/typing-duel/api/ws', maxPayload: 2048 });
+const wss = new WebSocketServer({ server, path: '/api/ws', maxPayload: 2048 });
 
-wss.on('connection', ws => {
+// LOG DEBUGGING: Pantau jika ada request upgrade WebSocket yang masuk tapi gagal/ditolak path-nya
+server.on('upgrade', (req, socket, head) => {
+  console.log(`[WS UPGRADE ATTEMPT] Request URL: ${req.url} | Headers:`, JSON.stringify(req.headers));
+});
+
+wss.on('connection', (ws, req) => {
+  console.log(`[WS CONNECTED] Client connected successfully from IP: ${req.socket.remoteAddress} | URL: ${req.url}`);
   ws.isAlive = true; ws.on('pong', () => ws.isAlive = true);
+
   ws.on('message', raw => {
-    let m; try { m = JSON.parse(raw); } catch { return; }
+    console.log(`[WS MESSAGE] Received raw:`, raw.toString());
+    let m; try { m = JSON.parse(raw); } catch (e) { console.error('[WS ERROR] Failed to parse JSON:', raw.toString()); return; }
     try { // satu pesan aneh tidak boleh menjatuhkan seluruh server
+      console.log(`[WS ACTION] Type: ${m.type}`, m);
       if (m.type === 'join' && !ws.room && !ws.queued) join(ws, m);
       else if (m.type === 'quick' && !ws.room && !ws.queued) quick(ws, m);
       else if (m.type === 'training' && !ws.room && !ws.queued) training(ws, m);
@@ -59,10 +79,20 @@ wss.on('connection', ws => {
       else if (m.type === 'done' && ws.room) done(ws, m);
       else if (m.type === 'typo' && ws.room) typo_(ws, m);
       else if (m.type === 'mw' && ws.room) mword(ws, m);
-    } catch (e) { console.error('handler error:', e); }
+      else console.warn(`[WS WARN] Unhandled or invalid state for message type: ${m.type}`);
+    } catch (e) { console.error('[WS HANDLER ERROR]:', e); }
   });
-  ws.on('close', () => leave(ws));
+
+  ws.on('close', (code, reason) => {
+    console.log(`[WS CLOSED] Client disconnected. Code: ${code}, Reason: ${reason}`);
+    leave(ws);
+  });
+
+  ws.on('error', (err) => {
+    console.error('[WS ERROR EVENT]:', err);
+  });
 });
+
 setInterval(() => wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }), 30000);
 
 // ---- Training mode: lawan bot. Bot = "socket" palsu yang tidak mengirim apa-apa, lalu `done` dijadwalkan sesuai kecepatan ketik ----

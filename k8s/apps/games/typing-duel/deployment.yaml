@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: typing-duel-backend
-          image: finsasc/typing-duel-backend:v1
+          image: finsasc/typing-duel-backend:v1.0.1
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: "100m"
@@ -25,4 +26,5 @@ spec:
               cpu: "700m"
               memory: "512Mi"
           ports:
-            - containerPort: 80
+            - name: typing-port
+              containerPort: 8204

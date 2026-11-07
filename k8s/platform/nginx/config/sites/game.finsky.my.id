@@ -12,12 +12,24 @@ server {
         try_files $uri $uri/ /typing-duel/index.html;
     }
 
-    location /typing-duel/api/ {
-        proxy_pass http://typing-duel-service.finsky-apps.svc.cluster.local:8204;
+    location /typing-duel/api/ws {
+        proxy_pass http://typing-duel/api/ws;
 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    location /typing-duel/api/ {
+        proxy_pass http://typing-duel/;
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
