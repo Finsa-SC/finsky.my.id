@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adguard-deploy
+  labels:
+    app: adguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adguard
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: adguard
+    spec:
+      containers:
+        - name: adguardhome
+          image: adguard/adguardhome:latest
+          volumeMounts:
+            - name: adguard-storage
+              mountPath: /opt/adguardhome/work
+            - name: adguard-storage
+              mountPath: /opt/adguardhome/conf
+      volumes:
+        - name: adguard-storage
+          persistentVolumeClaim:
+            claimName: adguard-home-pvc
+status: {}

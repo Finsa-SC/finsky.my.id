@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: finsasc/nginx:latest
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: nginx-main
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+
+            - name: nginx-conf-d
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+
+            - name: nginx-sites
+              mountPath: /etc/nginx/sites
+              readOnly: true
+
+            - name: nginx-snippets
+              mountPath: /etc/nginx/snippets
+              readOnly: true
+      volumes:
+        - name: nginx-main
+          configMap:
+            name: nginx-main
+
+        - name: nginx-conf-d
+          configMap:
+            name: nginx-conf-d
+
+        - name: nginx-sites
+          configMap:
+            name: nginx-sites
+
+        - name: nginx-snippets
+          configMap:
+            name: nginx-snippets

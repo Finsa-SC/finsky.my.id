@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: uptime-kuma-provision
+spec:
+  template:
+    spec:
+      containers:
+        - name: uptime-kuma-provision
+          image: node:22-alpine
+          command:
+            - node
+            - /scripts/seed.js
+          volumeMounts:
+            - name: seed-storage
+              mountPath: /scripts/seed.js
+              subPath: seed.js
+      volumes:
+        - name: seed-storage
+          configMap:
+            name: uptime-kuma-seed
+
+      restartPolicy: Never

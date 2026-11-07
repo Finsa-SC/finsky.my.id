@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: uptime-kuma-service
+  labels:
+    app: uptime-kuma
+spec:
+  ports:
+  - name: uptime-kuma-port
+    protocol: TCP
+    port: 8202
+    targetPort: kuma-port
+  selector:
+    app: uptime-kuma
+  type: ClusterIP

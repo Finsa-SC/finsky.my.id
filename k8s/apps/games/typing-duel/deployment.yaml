@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: typing-duel-deploy
+  labels:
+    app: typing-duel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: typing-duel
+  template:
+    metadata:
+      labels:
+        app: typing-duel
+    spec:
+      containers:
+        - name: typing-duel-backend
+          image: finsasc/typing-duel-backend:v1
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "700m"
+              memory: "512Mi"
+          ports:
+            - containerPort: 80
