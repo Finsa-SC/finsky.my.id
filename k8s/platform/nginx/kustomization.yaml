@@ -4,6 +4,7 @@ namespace: finsky-platform
 resources:
   - service.yaml
   - deployment.yaml
+  - hpa.yaml
 configMapGenerator:
   - name: nginx-main
     files:

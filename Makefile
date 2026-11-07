@@ -14,6 +14,7 @@ up-nginx:
 	kubectl rollout status deployment/filebrowser-deploy -n finsky-platform --timeout=120s
 	kubectl rollout status deployment/adguard-deploy -n finsky-platform --timeout=120s
 	kubectl rollout status deployment/uptime-kuma-deploy -n finsky-platform --timeout=120s
+	kubectl rollout status deployment/typing-duel-deploy -n finsky-apps --timeout=120s
 	kubectl apply -k k8s/platform/nginx/
 
 down-nginx:

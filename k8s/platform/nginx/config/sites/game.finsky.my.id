@@ -13,7 +13,7 @@ server {
     }
 
     location /typing-duel/api/ {
-        proxy_pass http://typing-duel-service:8204;
+        proxy_pass http://typing-duel-service.finsky-apps.svc.cluster.local:8204;
 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

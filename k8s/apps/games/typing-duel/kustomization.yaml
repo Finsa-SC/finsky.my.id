@@ -4,3 +4,4 @@ namespace: finsky-apps
 resources:
   - service.yaml
   - deployment.yaml
+  - hpa.yaml

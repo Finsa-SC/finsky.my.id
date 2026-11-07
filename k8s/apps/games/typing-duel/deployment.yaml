@@ -9,7 +9,6 @@ spec:
   selector:
     matchLabels:
       app: typing-duel
-  strategy: {}
   template:
     metadata:
       labels:
@@ -18,5 +17,12 @@ spec:
       containers:
         - name: typing-duel-backend
           image: finsasc/typing-duel-backend:v1
-          resources: {}
-status: {}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "700m"
+              memory: "512Mi"
+          ports:
+            - containerPort: 80
