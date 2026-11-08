@@ -16,11 +16,12 @@ configMapGenerator:
 
   - name: nginx-sites
     files:
-      - config/sites/deck.finsky.my.id
+      - config/sites/finsky.my.id
+      - config/sites/uptime.finsky.my.id
+      - config/sites/grafana.finsky.my.id
       - config/sites/dns.finsky.my.id
       - config/sites/downloader.finsky.my.id
       - config/sites/drive.finsky.my.id
-      - config/sites/finsky.my.id
       - config/sites/game.finsky.my.id
 
   - name: nginx-snippets

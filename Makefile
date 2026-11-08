@@ -1,4 +1,4 @@
-.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up-downloader down-downloader up-kuma down-kuma up-adguard down-adguard up-filebrowser down-filebrowser up-typing-duel down-typing-duel up-game down-game up-namespace down-namespace up down get
+.PHONY: up-cloudflared down-cloudflared up-nginx down-nginx up-downloader down-downloader up-kuma down-kuma up-adguard down-adguard up-filebrowser down-filebrowser up-typing-duel down-typing-duel up-game down-game up-namespace down-namespace up-grafana down-grafana up down get
 
 ### === Cloudflared ===
 up-cloudflared:
@@ -36,6 +36,14 @@ up-kuma:
 down-kuma:
 	kubectl delete -k k8s/platform/uptime-kuma/
 
+### === Grafana ===
+up-grafana:
+	sops -d k8s/platform/grafana/secret.enc.yaml | kubectl apply -n finsky-platform -f -
+	kubectl apply -k k8s/platform/grafana/
+
+down-grafana:
+	kubectl delete -k k8s/platform/grafana/
+
 ### === Adguard Home ===
 up-adguard:
 	kubectl apply -k k8s/platform/adguard/
@@ -70,9 +78,9 @@ up-game:	up-typing-duel
 down-game:	down-typing-duel
 
 ### === finsky.my.id ===
-up:	up-cloudflared up-downloader up-kuma up-adguard up-filebrowser up-game up-nginx
+up:	up-cloudflared up-downloader up-kuma up-adguard up-filebrowser up-game up-grafana up-nginx
 
-down:	down-cloudflared down-downloader down-kuma down-adguard down-filebrowser down-game down-nginx
+down:	down-cloudflared down-downloader down-kuma down-adguard down-filebrowser down-game down-grafana down-nginx
 
 get:
 	@kubectl get pods -A | grep "finsky" || echo "no pod found."
